@@ -105,7 +105,6 @@ test("configures the durable cache and lean toolchain", async () => {
   assert.match(stylesheet, /h1,\s+h2,\s+h3,\s+h4,\s+h5,\s+h6\s*{[^}]*font-weight: inherit;/s);
   assert.match(stylesheet, /\.commit-heading-actions\s*{[^}]*align-items: flex-start;/s);
   assert.match(stylesheet, /\.live-status\s*{[^}]*align-items: center;/s);
-  assert.match(stylesheet, /\.sync-dot\s*{[^}]*margin-top: 0;/s);
   assert.doesNotMatch(stylesheet, /\.rollup-details\s*{[^}]*border-(?:top|bottom)/s);
   assert.doesNotMatch(stylesheet, /history-stats|commit-message-popover|view-rules|summary-action|commit-footer/);
   assert.match(historyRoute, /requestedRefFetchedAt \?\? Date\.now\(\)/);

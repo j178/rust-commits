@@ -1,118 +1,17 @@
 "use client";
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
-import type {
-  HistoryItem,
-  HistoryResponse,
-  PullRequestDetails,
-  RollupEntry,
+import { fallbackItems } from "./lib/fallback-history";
+import {
+  RUST_REPO,
+  type HistoryItem,
+  type HistoryResponse,
+  type PullRequestDetails,
+  type RollupEntry,
 } from "./lib/history";
 
-const RUST_REPO = "https://github.com/rust-lang/rust";
 const pullRequestDetailsCache = new Map<number, PullRequestDetails>();
 const pullRequestDetailsRequests = new Map<number, Promise<PullRequestDetails>>();
-
-const firstRollup: RollupEntry[] = [
-  { pr: 158404, title: "trait_solver: normalize next-gen region constraints", status: "merged" },
-  { pr: 160631, title: "Do not eagerly download rustfmt in bootstrap", status: "merged" },
-  { pr: 160642, title: "mir: prohibit projection into scalable vec", status: "merged" },
-  { pr: 160749, title: "MaybeDangling: ensure references fit inside the address space", status: "merged" },
-  { pr: 160791, title: "Use recognizer functions for enums and tuple structs", status: "merged" },
-  { pr: 160500, title: "Fix inaccurate description for crate and pathroot", status: "merged" },
-  { pr: 160590, title: "Docs & bors: Replace mentions of libs-api with libs", status: "merged" },
-  { pr: 160825, title: "Fix references to unsupported on sys::paths::unix", status: "merged" },
-  { pr: 160852, title: "Use remove_dir_all for ./x clean", status: "merged" },
-  { pr: 160829, title: "bootstrap: Make main.rs a stub that calls into the library crate", status: "failed" },
-];
-
-const fallbackItems: HistoryItem[] = [
-  {
-    sha: "fdda4c6a308e5ae5514757601fd41b2268665ce7",
-    date: "2026-08-10T22:02:56Z",
-    headline: "Auto merge of #160801 - nnethercote:new-solver-probes, r=jdonszelmann",
-    title: "Optimize new solver unification table ops",
-    message: "Auto merge of #160801 - nnethercote:new-solver-probes, r=jdonszelmann\n\nOptimize new solver unification table ops",
-    pr: 160801,
-    source: "nnethercote:new-solver-probes",
-    author: "nnethercote",
-    reviewers: ["jdonszelmann"],
-    url: `${RUST_REPO}/commit/fdda4c6a308e5ae5514757601fd41b2268665ce7`,
-    kind: "merge",
-    rollupCount: 0,
-    rollup: [],
-  },
-  {
-    sha: "12c36e2539c54397c51d6ea4401defd8768a4f5b",
-    date: "2026-08-10T18:52:47Z",
-    headline: "Auto merge of #160867 - JonathanBrouwer:rollup-bas1App, r=JonathanBrouwer",
-    title: "Rollup of 9 pull requests",
-    message: "Auto merge of #160867 - JonathanBrouwer:rollup-bas1App, r=JonathanBrouwer\n\nRollup of 9 pull requests",
-    pr: 160867,
-    source: "JonathanBrouwer:rollup-bas1App",
-    author: "JonathanBrouwer",
-    reviewers: ["JonathanBrouwer"],
-    url: `${RUST_REPO}/commit/12c36e2539c54397c51d6ea4401defd8768a4f5b`,
-    kind: "rollup",
-    rollupCount: 9,
-    rollup: firstRollup,
-  },
-  {
-    sha: "ef20314466010b8b9259ec5f86230c530ca08661",
-    date: "2026-08-10T15:41:56Z",
-    headline: "Auto merge of #160645 - Kobzol:bootstrap-llvm, r=jieyouxu",
-    title: "Assorted bootstrap LLVM refactors (part 1/N)",
-    message: "Auto merge of #160645 - Kobzol:bootstrap-llvm, r=jieyouxu\n\nAssorted bootstrap LLVM refactors (part 1/N)",
-    pr: 160645,
-    source: "Kobzol:bootstrap-llvm",
-    author: "Kobzol",
-    reviewers: ["jieyouxu"],
-    url: `${RUST_REPO}/commit/ef20314466010b8b9259ec5f86230c530ca08661`,
-    kind: "merge",
-    rollupCount: 0,
-    rollup: [],
-  },
-  {
-    sha: "ea060423749bf6e561c3398f403425c502beb9ba",
-    date: "2026-08-10T12:35:33Z",
-    headline: "Auto merge of #160849 - JonathanBrouwer:rollup-qb2wimf, r=JonathanBrouwer",
-    title: "Rollup of 10 pull requests",
-    message: "Auto merge of #160849 - JonathanBrouwer:rollup-qb2wimf, r=JonathanBrouwer\n\nRollup of 10 pull requests",
-    pr: 160849,
-    source: "JonathanBrouwer:rollup-qb2wimf",
-    author: "JonathanBrouwer",
-    reviewers: ["JonathanBrouwer"],
-    url: `${RUST_REPO}/commit/ea060423749bf6e561c3398f403425c502beb9ba`,
-    kind: "rollup",
-    rollupCount: 10,
-    rollup: [
-      { pr: 160841, title: "rust-analyzer subtree update", status: "merged" },
-      { pr: 160253, title: "Add CI job for checking stdlib semver compatibility", status: "merged" },
-      { pr: 160216, title: "clean up handling of paths in mgca", status: "merged" },
-      { pr: 160832, title: "Fix funding link", status: "merged" },
-      { pr: 160833, title: "Remove analysis arg from ResultsVisitor methods", status: "merged" },
-      { pr: 160834, title: "Update Enzyme submodule", status: "merged" },
-      { pr: 160836, title: "Fix swapped documentation lines on io::Read", status: "merged" },
-      { pr: 160839, title: "Stop updating npm lockfile by Renovatebot", status: "merged" },
-      { pr: 160840, title: "Rename SmallCopyList to SmallCopySet", status: "merged" },
-      { pr: 160846, title: "use rustc_attr_ir imports more", status: "merged" },
-    ],
-  },
-  {
-    sha: "7088e4b",
-    date: "2026-08-10T09:29:58Z",
-    headline: "Auto merge of #158447 - jdonszelmann:shallow-resolve-to-root-var, r=lcnr",
-    title: "Shallow resolve ty and const vars to their root vars, attempt 2",
-    message: "Auto merge of #158447 - jdonszelmann:shallow-resolve-to-root-var, r=lcnr\n\nShallow resolve ty and const vars to their root vars, attempt 2",
-    pr: 158447,
-    source: "jdonszelmann:shallow-resolve-to-root-var",
-    author: "jdonszelmann",
-    reviewers: ["lcnr"],
-    url: `${RUST_REPO}/commit/7088e4b`,
-    kind: "merge",
-    rollupCount: 0,
-    rollup: [],
-  },
-];
 
 const utcDayFormatter = new Intl.DateTimeFormat("en", {
   month: "short",
@@ -171,11 +70,8 @@ function useBrowserTimeZone() {
   );
 }
 
-function utcDayKey(date: string) {
-  return date.slice(0, 10);
-}
-
-function localDayKey(date: string) {
+function dayKey(date: string, browserTimeZone: boolean) {
+  if (!browserTimeZone) return date.slice(0, 10);
   const value = new Date(date);
   return `${value.getFullYear()}-${value.getMonth()}-${value.getDate()}`;
 }
@@ -190,11 +86,9 @@ function matchesQuery(item: HistoryItem, query: string) {
   if (!query) return true;
   const searchable = [
     item.title,
-    item.headline,
     item.message,
     item.sha,
     item.author,
-    item.source ?? "",
     item.pr?.toString() ?? "",
     ...item.reviewers,
     ...item.rollup.flatMap((entry) => [entry.title, entry.pr.toString()]),
@@ -205,7 +99,13 @@ function matchesQuery(item: HistoryItem, query: string) {
 }
 
 function ExternalArrow() {
-  return <span aria-hidden="true">↗</span>;
+  return <span className="external-arrow" aria-hidden="true">↗</span>;
+}
+
+async function fetchHistoryPage(url: string, signal?: AbortSignal) {
+  const response = await fetch(url, { signal });
+  if (!response.ok) throw new Error("History request failed");
+  return (await response.json()) as HistoryResponse;
 }
 
 async function requestPullRequestDetails(number: number) {
@@ -304,18 +204,16 @@ function RollupEntryLink({
 }) {
   const cached = pullRequestDetailsCache.get(entry.pr) ?? null;
   const [details, setDetails] = useState<PullRequestDetails | null>(cached);
-  const [loadState, setLoadState] = useState<"idle" | "loading" | "ready" | "error">(
-    cached ? "ready" : "idle",
-  );
+  const [loadState, setLoadState] = useState<"idle" | "loading" | "error">("idle");
   const detailsId = `pull-details-${rollupPr ?? "rollup"}-${entry.pr}`;
 
   function loadDetails() {
-    if (loadState === "loading" || loadState === "ready") return;
+    if (details || loadState === "loading") return;
     setLoadState("loading");
     void requestPullRequestDetails(entry.pr)
       .then((value) => {
         setDetails(value);
-        setLoadState("ready");
+        setLoadState("idle");
       })
       .catch(() => setLoadState("error"));
   }
@@ -458,9 +356,7 @@ export function HistoryExplorer() {
 
     async function loadLatest() {
       try {
-        const response = await fetch("/api/history?limit=9", { signal: controller.signal });
-        if (!response.ok) throw new Error("History request failed");
-        const data = (await response.json()) as HistoryResponse;
+        const data = await fetchHistoryPage("/api/history?limit=9", controller.signal);
         if (data.items.length > 0) {
           setItems(data.items);
           setNextSha(data.nextSha);
@@ -495,9 +391,7 @@ export function HistoryExplorer() {
     setStatus("loading-more");
 
     try {
-      const response = await fetch(`/api/history?limit=9&sha=${nextSha}`);
-      if (!response.ok) throw new Error("History request failed");
-      const data = (await response.json()) as HistoryResponse;
+      const data = await fetchHistoryPage(`/api/history?limit=9&sha=${nextSha}`);
       setItems((current) => {
         const known = new Set(current.map((item) => item.sha));
         return [...current, ...data.items.filter((item) => !known.has(item.sha))];
@@ -508,8 +402,6 @@ export function HistoryExplorer() {
       setStatus("snapshot");
     }
   }
-
-  let previousDay = "";
 
   return (
     <main>
@@ -587,20 +479,21 @@ export function HistoryExplorer() {
         </div>
 
         <div className="timeline">
-          {filteredItems.map((item) => {
-            const currentDay = browserTimeZone ? localDayKey(item.date) : utcDayKey(item.date);
+          {filteredItems.map((item, index) => {
+            const currentDay = dayKey(item.date, browserTimeZone);
+            const previousItem = filteredItems[index - 1];
+            const previousDay = previousItem ? dayKey(previousItem.date, browserTimeZone) : null;
             const showDay = currentDay !== previousDay;
-            previousDay = currentDay;
             return (
               <div className="timeline-entry" key={item.sha}>
                 {showDay && (
                   <div className="day-label">
-                    <span>
+                    <span className="day-text">
                       {(browserTimeZone ? localDayFormatter : utcDayFormatter).format(
                         new Date(item.date),
                       )}
                     </span>
-                    <i />
+                    <span className="day-marker" aria-hidden="true" />
                   </div>
                 )}
                 <CommitCard item={item} browserTimeZone={browserTimeZone} />
@@ -627,7 +520,7 @@ export function HistoryExplorer() {
               disabled={status === "loading-more"}
             >
               <span>{status === "loading-more" ? "Loading…" : "Load older mainline commits"}</span>
-              <b aria-hidden="true">↓</b>
+              <span className="load-more-icon" aria-hidden="true">↓</span>
             </button>
           </div>
         )}

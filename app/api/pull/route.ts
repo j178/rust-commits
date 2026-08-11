@@ -1,3 +1,4 @@
+import { fetchGitHubJson } from "@/app/lib/github-api";
 import type { PullRequestDetails } from "@/app/lib/history";
 import { readCachedPullRequest, writeCachedPullRequest } from "@/db";
 
@@ -29,25 +30,9 @@ function cleanPullRequestBody(body: string | null) {
 }
 
 async function fetchGitHubPullRequest(number: number): Promise<PullRequestDetails> {
-  const headers: Record<string, string> = {
-    Accept: "application/vnd.github+json",
-    "User-Agent": "rust-mainline-history",
-    "X-GitHub-Api-Version": "2022-11-28",
-  };
-
-  const token = process.env.GITHUB_TOKEN;
-  if (token) headers.Authorization = `Bearer ${token}`;
-
-  const response = await fetch(`${GITHUB_PULL_URL}/${number}`, { headers });
-  if (!response.ok) {
-    const remaining = response.headers.get("x-ratelimit-remaining");
-    if (response.status === 403 && remaining === "0") {
-      throw new Error("GitHub rate limit reached. Please try again shortly.");
-    }
-    throw new Error(`GitHub returned ${response.status}.`);
-  }
-
-  const pullRequest = (await response.json()) as GitHubPullRequest;
+  const pullRequest = await fetchGitHubJson<GitHubPullRequest>(
+    `${GITHUB_PULL_URL}/${number}`,
+  );
   return {
     number: pullRequest.number,
     title: pullRequest.title,

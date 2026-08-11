@@ -4,6 +4,7 @@ import {
   type HistoryItem,
   type HistoryResponse,
 } from "@/app/lib/history";
+import { fetchGitHubJson } from "@/app/lib/github-api";
 import {
   readCachedCommitBatch,
   writeCachedCommitBatch,
@@ -18,28 +19,7 @@ async function fetchGitHubCommitBatch(ref: string): Promise<GitHubCommit[]> {
   const url = new URL(GITHUB_COMMITS_URL);
   url.searchParams.set("sha", ref);
   url.searchParams.set("per_page", "100");
-
-  const headers: Record<string, string> = {
-    Accept: "application/vnd.github+json",
-    "User-Agent": "rust-mainline-history",
-    "X-GitHub-Api-Version": "2022-11-28",
-  };
-
-  const token = process.env.GITHUB_TOKEN;
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
-
-  const response = await fetch(url, { headers });
-  if (!response.ok) {
-    const remaining = response.headers.get("x-ratelimit-remaining");
-    if (response.status === 403 && remaining === "0") {
-      throw new Error("GitHub rate limit reached. Please try again shortly.");
-    }
-    throw new Error(`GitHub returned ${response.status}.`);
-  }
-
-  return (await response.json()) as GitHubCommit[];
+  return fetchGitHubJson<GitHubCommit[]>(url);
 }
 
 async function fetchCommitBatch(ref: string): Promise<CachedCommitBatch> {
@@ -85,7 +65,6 @@ export async function GET(request: Request) {
   const limit = Math.max(1, Math.min(15, requestedLimit || 9));
   const items: HistoryItem[] = [];
   const traversed = new Set<string>();
-  const fetched = new Set<string>();
   let cursor = requestedRef;
   let nextSha: string | null = null;
   let requestedRefFetchedAt: number | null = null;
@@ -98,7 +77,6 @@ export async function GET(request: Request) {
       if (batch.length === 0) break;
 
       const bySha = new Map(batch.map((commit) => [commit.sha, commit]));
-      batch.forEach((commit) => fetched.add(commit.sha));
 
       let current = bySha.get(cursor) ?? batch[0];
 
@@ -128,7 +106,6 @@ export async function GET(request: Request) {
     const payload: HistoryResponse = {
       items,
       nextSha,
-      foldedCount: Math.max(0, fetched.size - traversed.size),
       fetchedAt: new Date(requestedRefFetchedAt ?? Date.now()).toISOString(),
     };
 

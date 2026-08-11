@@ -1,3 +1,5 @@
+export const RUST_REPO = "https://github.com/rust-lang/rust";
+
 export type RollupEntry = {
   pr: number;
   title: string;
@@ -7,11 +9,9 @@ export type RollupEntry = {
 export type HistoryItem = {
   sha: string;
   date: string;
-  headline: string;
   title: string;
   message: string;
   pr: number | null;
-  source: string | null;
   author: string;
   reviewers: string[];
   url: string;
@@ -23,7 +23,6 @@ export type HistoryItem = {
 export type HistoryResponse = {
   items: HistoryItem[];
   nextSha: string | null;
-  foldedCount: number;
   fetchedAt: string;
 };
 
@@ -96,11 +95,9 @@ export function parseCommit(commit: GitHubCommit): HistoryItem {
     return {
       sha: commit.sha,
       date: commit.commit.author.date,
-      headline,
       title: firstBodyLine(lines),
       message,
       pr: null,
-      source: null,
       author: commit.commit.author.name,
       reviewers: [],
       url: commit.html_url,
@@ -116,11 +113,9 @@ export function parseCommit(commit: GitHubCommit): HistoryItem {
   return {
     sha: commit.sha,
     date: commit.commit.author.date,
-    headline,
     title: firstBodyLine(lines),
     message,
     pr: Number(merge[1]),
-    source,
     author,
     reviewers: merge[3]
       .split(",")
