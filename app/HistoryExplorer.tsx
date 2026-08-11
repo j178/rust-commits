@@ -159,14 +159,21 @@ function displayCommitMessage(item: HistoryItem) {
 }
 
 function CommitMessage({ item }: { item: HistoryItem }) {
+  const messageId = `commit-message-${item.sha}`;
+
   return (
-    <details className="commit-message">
-      <summary>
-        <span className="message-chevron" aria-hidden="true" />
+    <div className="commit-message">
+      <button type="button" className="commit-message-trigger" aria-describedby={messageId}>
+        <span className="message-dots" aria-hidden="true">•••</span>
         Commit message
-      </summary>
-      <pre>{displayCommitMessage(item)}</pre>
-    </details>
+      </button>
+      <div className="commit-message-popover" id={messageId} role="tooltip">
+        <div className="commit-message-panel">
+          <span className="message-panel-label">Raw commit message</span>
+          <pre>{displayCommitMessage(item)}</pre>
+        </div>
+      </div>
+    </div>
   );
 }
 

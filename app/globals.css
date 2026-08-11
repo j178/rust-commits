@@ -661,55 +661,86 @@ a {
 }
 
 .commit-message {
+  position: relative;
   min-width: 0;
   flex: 1;
 }
 
-.commit-message summary {
+.commit-message-trigger {
   width: fit-content;
   min-height: 22px;
+  padding: 0;
   display: inline-flex;
   align-items: center;
   gap: 8px;
   color: #746d63;
+  background: transparent;
+  border: 0;
   font: 600 10px/1 var(--font-mono);
-  list-style: none;
   cursor: pointer;
-  user-select: none;
   transition: color 160ms ease;
 }
 
-.commit-message summary::-webkit-details-marker {
-  display: none;
-}
-
-.commit-message summary:hover {
+.commit-message-trigger:hover,
+.commit-message-trigger:focus-visible {
   color: var(--rust-dark);
 }
 
-.message-chevron {
-  width: 6px;
-  height: 6px;
-  border-right: 1px solid currentColor;
-  border-bottom: 1px solid currentColor;
-  transform: rotate(-45deg);
-  transition: transform 160ms ease;
+.message-dots {
+  color: var(--rust);
+  font-size: 8px;
+  letter-spacing: 1px;
 }
 
-.commit-message[open] .message-chevron {
-  transform: rotate(45deg) translate(-1px, -1px);
+.commit-message-popover {
+  position: absolute;
+  z-index: 20;
+  bottom: 100%;
+  left: 0;
+  width: min(640px, calc(100vw - 64px));
+  padding-bottom: 10px;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(5px);
+  transition: opacity 140ms ease, transform 140ms ease, visibility 140ms ease;
 }
 
-.commit-message pre {
-  max-height: 240px;
-  margin: 12px 20px 3px 0;
-  padding: 14px 16px;
+.commit-message:hover .commit-message-popover,
+.commit-message:focus-within .commit-message-popover {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.commit-message-panel {
+  padding: 15px 17px 16px;
+  color: #d8d2c8;
+  background: #25221f;
+  border: 1px solid #4b4640;
+  border-left: 3px solid var(--rust);
+  box-shadow: 0 18px 48px rgba(18, 15, 12, 0.28);
+}
+
+.message-panel-label {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--sage);
+  font: 700 8px/1 var(--font-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.commit-message-panel pre {
+  max-height: 230px;
+  margin: 0;
+  padding: 0;
   overflow: auto;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  color: #5f5951;
-  background: #eee9df;
-  border-left: 2px solid var(--rust);
+  color: inherit;
+  background: transparent;
   font: 500 11px/1.6 var(--font-mono);
 }
 
@@ -906,18 +937,13 @@ a {
   color: var(--paper);
 }
 
-.commit-card.is-rollup .commit-message summary {
+.commit-card.is-rollup .commit-message-trigger {
   color: #8f8981;
 }
 
-.commit-card.is-rollup .commit-message summary:hover {
+.commit-card.is-rollup .commit-message-trigger:hover,
+.commit-card.is-rollup .commit-message-trigger:focus-visible {
   color: var(--paper);
-}
-
-.commit-card.is-rollup .commit-message pre {
-  color: #c7c1b7;
-  background: #292622;
-  border-left-color: var(--sage);
 }
 
 .empty-state {
