@@ -9,6 +9,7 @@ export type HistoryItem = {
   date: string;
   headline: string;
   title: string;
+  message: string;
   pr: number | null;
   source: string | null;
   author: string;
@@ -76,7 +77,8 @@ function parseRollup(lines: string[]): RollupEntry[] {
 }
 
 export function parseCommit(commit: GitHubCommit): HistoryItem {
-  const lines = commit.commit.message.replace(/\r/g, "").split("\n");
+  const message = commit.commit.message.replace(/\r/g, "").trim();
+  const lines = message.split("\n");
   const headline = lines[0].trim();
   const merge = headline.match(AUTO_MERGE_RE);
   const rollup = parseRollup(lines);
@@ -88,6 +90,7 @@ export function parseCommit(commit: GitHubCommit): HistoryItem {
       date: commit.commit.author.date,
       headline,
       title: firstBodyLine(lines),
+      message,
       pr: null,
       source: null,
       author: commit.commit.author.name,
@@ -107,6 +110,7 @@ export function parseCommit(commit: GitHubCommit): HistoryItem {
     date: commit.commit.author.date,
     headline,
     title: firstBodyLine(lines),
+    message,
     pr: Number(merge[1]),
     source,
     author,

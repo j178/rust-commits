@@ -35,6 +35,8 @@ test("server-renders the Rust Mainline product", async () => {
   assert.match(html, /Optimize new solver unification table ops/);
   assert.match(html, /Included pull requests/);
   assert.match(html, /9<!-- --> merged/);
+  assert.match(html, /Commit message/);
+  assert.match(html, /Auto merge of #160801/);
   assert.doesNotMatch(html, /One tested batch on the mainline/);
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton|Your site is taking shape/);
 });

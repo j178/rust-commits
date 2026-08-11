@@ -637,10 +637,64 @@ a {
 }
 
 .commit-footer {
+  align-items: flex-start;
   min-height: 36px;
   margin-top: 20px;
   padding-top: 14px;
   border-top: 1px solid #e0dbd2;
+}
+
+.commit-message {
+  min-width: 0;
+  flex: 1;
+}
+
+.commit-message summary {
+  width: fit-content;
+  min-height: 22px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #746d63;
+  font: 600 10px/1 var(--font-mono);
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+  transition: color 160ms ease;
+}
+
+.commit-message summary::-webkit-details-marker {
+  display: none;
+}
+
+.commit-message summary:hover {
+  color: var(--rust-dark);
+}
+
+.message-chevron {
+  width: 6px;
+  height: 6px;
+  border-right: 1px solid currentColor;
+  border-bottom: 1px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 160ms ease;
+}
+
+.commit-message[open] .message-chevron {
+  transform: rotate(45deg) translate(-1px, -1px);
+}
+
+.commit-message pre {
+  max-height: 240px;
+  margin: 12px 20px 3px 0;
+  padding: 14px 16px;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: #5f5951;
+  background: #eee9df;
+  border-left: 2px solid var(--rust);
+  font: 500 11px/1.6 var(--font-mono);
 }
 
 .sha-link {
@@ -833,7 +887,7 @@ a {
 }
 
 .commit-card.is-rollup .commit-meta {
-  margin-top: 0;
+  margin-top: 20px;
   color: #858078;
 }
 
@@ -848,6 +902,20 @@ a {
 
 .commit-card.is-rollup .sha-link {
   color: #8f8981;
+}
+
+.commit-card.is-rollup .commit-message summary {
+  color: #8f8981;
+}
+
+.commit-card.is-rollup .commit-message summary:hover {
+  color: var(--paper);
+}
+
+.commit-card.is-rollup .commit-message pre {
+  color: #c7c1b7;
+  background: #292622;
+  border-left-color: var(--sage);
 }
 
 .empty-state {
@@ -984,14 +1052,6 @@ summary:focus-visible {
     display: none;
   }
 
-  .commit-card.is-rollup .commit-footer {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .commit-card.is-rollup .sha-link {
-    margin: 8px 0 0;
-  }
 }
 
 @media (max-width: 700px) {

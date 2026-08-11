@@ -28,6 +28,7 @@ const fallbackItems: HistoryItem[] = [
     date: "2026-08-10T22:02:56Z",
     headline: "Auto merge of #160801 - nnethercote:new-solver-probes, r=jdonszelmann",
     title: "Optimize new solver unification table ops",
+    message: "Auto merge of #160801 - nnethercote:new-solver-probes, r=jdonszelmann\n\nOptimize new solver unification table ops",
     pr: 160801,
     source: "nnethercote:new-solver-probes",
     author: "nnethercote",
@@ -42,6 +43,7 @@ const fallbackItems: HistoryItem[] = [
     date: "2026-08-10T18:52:47Z",
     headline: "Auto merge of #160867 - JonathanBrouwer:rollup-bas1App, r=JonathanBrouwer",
     title: "Rollup of 9 pull requests",
+    message: "Auto merge of #160867 - JonathanBrouwer:rollup-bas1App, r=JonathanBrouwer\n\nRollup of 9 pull requests",
     pr: 160867,
     source: "JonathanBrouwer:rollup-bas1App",
     author: "JonathanBrouwer",
@@ -56,6 +58,7 @@ const fallbackItems: HistoryItem[] = [
     date: "2026-08-10T15:41:56Z",
     headline: "Auto merge of #160645 - Kobzol:bootstrap-llvm, r=jieyouxu",
     title: "Assorted bootstrap LLVM refactors (part 1/N)",
+    message: "Auto merge of #160645 - Kobzol:bootstrap-llvm, r=jieyouxu\n\nAssorted bootstrap LLVM refactors (part 1/N)",
     pr: 160645,
     source: "Kobzol:bootstrap-llvm",
     author: "Kobzol",
@@ -70,6 +73,7 @@ const fallbackItems: HistoryItem[] = [
     date: "2026-08-10T12:35:33Z",
     headline: "Auto merge of #160849 - JonathanBrouwer:rollup-qb2wimf, r=JonathanBrouwer",
     title: "Rollup of 10 pull requests",
+    message: "Auto merge of #160849 - JonathanBrouwer:rollup-qb2wimf, r=JonathanBrouwer\n\nRollup of 10 pull requests",
     pr: 160849,
     source: "JonathanBrouwer:rollup-qb2wimf",
     author: "JonathanBrouwer",
@@ -95,6 +99,7 @@ const fallbackItems: HistoryItem[] = [
     date: "2026-08-10T09:29:58Z",
     headline: "Auto merge of #158447 - jdonszelmann:shallow-resolve-to-root-var, r=lcnr",
     title: "Shallow resolve ty and const vars to their root vars, attempt 2",
+    message: "Auto merge of #158447 - jdonszelmann:shallow-resolve-to-root-var, r=lcnr\n\nShallow resolve ty and const vars to their root vars, attempt 2",
     pr: 158447,
     source: "jdonszelmann:shallow-resolve-to-root-var",
     author: "jdonszelmann",
@@ -129,6 +134,7 @@ function matchesQuery(item: HistoryItem, query: string) {
   const searchable = [
     item.title,
     item.headline,
+    item.message,
     item.sha,
     item.author,
     item.source ?? "",
@@ -143,6 +149,25 @@ function matchesQuery(item: HistoryItem, query: string) {
 
 function ExternalArrow() {
   return <span aria-hidden="true">↗</span>;
+}
+
+function displayCommitMessage(item: HistoryItem) {
+  if (item.kind !== "rollup") return item.message;
+
+  const structuredList = item.message.search(/^(?:Successful|Failed) merges:\s*$/m);
+  return structuredList >= 0 ? item.message.slice(0, structuredList).trimEnd() : item.message;
+}
+
+function CommitMessage({ item }: { item: HistoryItem }) {
+  return (
+    <details className="commit-message">
+      <summary>
+        <span className="message-chevron" aria-hidden="true" />
+        Commit message
+      </summary>
+      <pre>{displayCommitMessage(item)}</pre>
+    </details>
+  );
 }
 
 function CommitMeta({ item }: { item: HistoryItem }) {
@@ -255,12 +280,12 @@ function CommitCard({ item }: { item: HistoryItem }) {
         </a>
       </div>
 
-      {!isRollup && <CommitMeta item={item} />}
+      <CommitMeta item={item} />
 
       {isRollup && <RollupList item={item} />}
 
       <div className="commit-footer">
-        {isRollup && <CommitMeta item={item} />}
+        <CommitMessage item={item} />
         <a href={item.url} target="_blank" rel="noreferrer" className="sha-link">
           <span className="commit-glyph" aria-hidden="true">◆</span>
           {item.sha.slice(0, 7)}
