@@ -391,31 +391,55 @@ a {
 }
 
 .live-status {
-  min-width: 122px;
+  min-width: 210px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: flex-end;
-  gap: 8px;
-  color: var(--sage-dark);
-  font: 650 10px/1 var(--font-mono);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  gap: 10px;
   white-space: nowrap;
 }
 
-.live-status > span {
+.sync-dot {
   width: 7px;
   height: 7px;
+  margin-top: 2px;
+  flex: 0 0 auto;
   border-radius: 50%;
   background: #739269;
   box-shadow: 0 0 0 4px rgba(115, 146, 105, 0.13);
 }
 
-.live-status.is-snapshot {
+.sync-copy {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.sync-copy strong {
+  color: var(--sage-dark);
+  font: 700 9px/1 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sync-copy > span {
+  color: #8b8479;
+  font: 500 8px/1 var(--font-mono);
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+
+.sync-copy time {
+  color: #5f5951;
+  font-weight: 650;
+}
+
+.live-status.is-snapshot .sync-copy strong {
   color: #99753d;
 }
 
-.live-status.is-snapshot > span {
+.live-status.is-snapshot .sync-dot {
   background: #b8873f;
   box-shadow: 0 0 0 4px rgba(184, 135, 63, 0.13);
 }
@@ -1113,7 +1137,21 @@ summary:focus-visible {
   }
 
   .live-status {
-    display: none;
+    min-width: 0;
+    padding: 2px 3px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .sync-dot {
+    margin-top: 0;
+  }
+
+  .sync-copy {
+    align-items: baseline;
+    flex-direction: row;
+    gap: 8px;
   }
 
   .timeline {

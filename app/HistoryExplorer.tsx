@@ -139,6 +139,25 @@ const localTimeFormatter = new Intl.DateTimeFormat("en", {
   timeZoneName: "short",
 });
 
+const utcSyncFormatter = new Intl.DateTimeFormat("en", {
+  month: "short",
+  day: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
+  timeZone: "UTC",
+  timeZoneName: "short",
+});
+
+const localSyncFormatter = new Intl.DateTimeFormat("en", {
+  month: "short",
+  day: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
+  timeZoneName: "short",
+});
+
 const subscribeToHydration = () => () => undefined;
 
 function useBrowserTimeZone() {
@@ -156,6 +175,12 @@ function utcDayKey(date: string) {
 function localDayKey(date: string) {
   const value = new Date(date);
   return `${value.getFullYear()}-${value.getMonth()}-${value.getDate()}`;
+}
+
+function formatSyncTime(date: string, browserTimeZone: boolean) {
+  const value = new Date(date);
+  if (Number.isNaN(value.getTime())) return null;
+  return (browserTimeZone ? localSyncFormatter : utcSyncFormatter).format(value);
 }
 
 function matchesQuery(item: HistoryItem, query: string) {
@@ -343,6 +368,7 @@ export function HistoryExplorer() {
   const [items, setItems] = useState<HistoryItem[]>(fallbackItems);
   const [nextSha, setNextSha] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [lastSyncAt, setLastSyncAt] = useState<string | null>(null);
   const [status, setStatus] = useState<"loading" | "live" | "snapshot" | "loading-more">("loading");
 
   useEffect(() => {
@@ -356,6 +382,7 @@ export function HistoryExplorer() {
         if (data.items.length > 0) {
           setItems(data.items);
           setNextSha(data.nextSha);
+          setLastSyncAt(data.fetchedAt);
           setStatus("live");
         }
       } catch (error) {
@@ -374,6 +401,12 @@ export function HistoryExplorer() {
     () => items.filter((item) => matchesQuery(item, normalizedQuery)),
     [items, normalizedQuery],
   );
+  const lastSyncTime = lastSyncAt ? formatSyncTime(lastSyncAt, browserTimeZone) : null;
+  const syncLabel = status === "loading"
+    ? "Syncing GitHub"
+    : status === "snapshot"
+      ? "Cached snapshot"
+      : "GitHub synced";
 
   async function loadOlder() {
     if (!nextSha || status === "loading-more") return;
@@ -459,8 +492,19 @@ export function HistoryExplorer() {
             <span><b>✓</b> inner commits folded</span>
           </div>
           <div className={`live-status ${status === "snapshot" ? "is-snapshot" : ""}`} aria-live="polite">
-            <span />
-            {status === "loading" ? "syncing" : status === "snapshot" ? "cached snapshot" : "GitHub synced"}
+            <span className="sync-dot" aria-hidden="true" />
+            <span className="sync-copy">
+              <strong>{syncLabel}</strong>
+              <span>
+                {lastSyncAt && lastSyncTime ? (
+                  <>Last sync · <time dateTime={lastSyncAt}>{lastSyncTime}</time></>
+                ) : status === "loading" ? (
+                  "Checking edge cache"
+                ) : (
+                  "Live sync unavailable"
+                )}
+              </span>
+            </span>
           </div>
         </div>
 

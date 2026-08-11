@@ -27,10 +27,13 @@ npm run lint
 
 The app uses GitHub's commits API through `/api/history`. Responses are stored
 in Cloudflare D1, so immutable commit ranges are fetched only once. The moving
-`main` ref is refreshed every five minutes, with stale data used if GitHub is
-temporarily unavailable. A bundled snapshot keeps the first render useful if
-both services are unavailable. Set `GITHUB_TOKEN` in the hosted runtime only if
-higher GitHub API limits are needed.
+`main` ref and the CDN response each have a five-minute freshness window.
+Refreshing is request-driven rather than scheduled: the first request that
+reaches the Worker after the D1 entry expires fetches GitHub and updates the
+cache. Stale data is used if GitHub is temporarily unavailable. A bundled
+snapshot keeps the first render useful if both services are unavailable. Set
+`GITHUB_TOKEN` in the hosted runtime only if higher GitHub API limits are
+needed.
 
 ## Deployment
 

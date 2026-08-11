@@ -4,7 +4,11 @@ import {
   type HistoryItem,
   type HistoryResponse,
 } from "@/app/lib/history";
-import { readCachedCommitBatch, writeCachedCommitBatch } from "@/db";
+import {
+  readCachedCommitBatch,
+  writeCachedCommitBatch,
+  type CachedCommitBatch,
+} from "@/db";
 
 const GITHUB_COMMITS_URL = "https://api.github.com/repos/rust-lang/rust/commits";
 const MAX_BATCHES = 3;
@@ -38,7 +42,7 @@ async function fetchGitHubCommitBatch(ref: string): Promise<GitHubCommit[]> {
   return (await response.json()) as GitHubCommit[];
 }
 
-async function fetchCommitBatch(ref: string): Promise<GitHubCommit[]> {
+async function fetchCommitBatch(ref: string): Promise<CachedCommitBatch> {
   let cached = null;
   try {
     cached = await readCachedCommitBatch(ref);
@@ -47,19 +51,20 @@ async function fetchCommitBatch(ref: string): Promise<GitHubCommit[]> {
   }
 
   if (cached && (ref !== "main" || Date.now() - cached.fetchedAt < MAIN_CACHE_TTL_MS)) {
-    return cached.commits;
+    return cached;
   }
 
   try {
     const commits = await fetchGitHubCommitBatch(ref);
+    const fetchedAt = Date.now();
     try {
-      await writeCachedCommitBatch(ref, commits);
+      await writeCachedCommitBatch(ref, commits, fetchedAt);
     } catch (error) {
       console.warn("Unable to update the GitHub commit cache.", error);
     }
-    return commits;
+    return { commits, fetchedAt };
   } catch (error) {
-    if (cached) return cached.commits;
+    if (cached) return cached;
     throw error;
   }
 }
@@ -83,10 +88,13 @@ export async function GET(request: Request) {
   const fetched = new Set<string>();
   let cursor = requestedRef;
   let nextSha: string | null = null;
+  let requestedRefFetchedAt: number | null = null;
 
   try {
     batchLoop: for (let batchIndex = 0; batchIndex < MAX_BATCHES; batchIndex += 1) {
-      const batch = await fetchCommitBatch(cursor);
+      const batchResult = await fetchCommitBatch(cursor);
+      const batch = batchResult.commits;
+      requestedRefFetchedAt ??= batchResult.fetchedAt;
       if (batch.length === 0) break;
 
       const bySha = new Map(batch.map((commit) => [commit.sha, commit]));
@@ -121,7 +129,7 @@ export async function GET(request: Request) {
       items,
       nextSha,
       foldedCount: Math.max(0, fetched.size - traversed.size),
-      fetchedAt: new Date().toISOString(),
+      fetchedAt: new Date(requestedRefFetchedAt ?? Date.now()).toISOString(),
     };
 
     return Response.json(payload, {

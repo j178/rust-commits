@@ -34,6 +34,9 @@ test("server-renders the Rust Mainline product", async () => {
   assert.match(html, /on main\./);
   assert.match(html, /class="hero-title"/);
   assert.match(html, /Mainline history/);
+  assert.match(html, /Syncing GitHub/);
+  assert.match(html, /Checking edge cache/);
+  assert.match(html, /class="sync-copy"/);
   assert.match(html, /Optimize new solver unification table ops/);
   assert.match(html, /<details class="rollup-details">/);
   assert.match(html, /9 pull requests included/);
@@ -69,11 +72,14 @@ test("removes all starter-preview wiring", async () => {
 });
 
 test("configures the durable cache and lean toolchain", async () => {
-  const [hostingJson, packageJson, migration, stylesheet] = await Promise.all([
+  const [hostingJson, packageJson, migration, stylesheet, historyRoute, database, readme] = await Promise.all([
     readFile(new URL("../.openai/hosting.json", import.meta.url), "utf8"),
     readFile(new URL("../package.json", import.meta.url), "utf8"),
     readFile(new URL("../drizzle/0000_special_whiplash.sql", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/history/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../db/index.ts", import.meta.url), "utf8"),
+    readFile(new URL("../README.md", import.meta.url), "utf8"),
   ]);
 
   const hosting = JSON.parse(hostingJson);
@@ -86,6 +92,10 @@ test("configures the durable cache and lean toolchain", async () => {
   assert.match(stylesheet, /h1,\s+h2,\s+h3,\s+h4,\s+h5,\s+h6\s*{[^}]*font-weight: inherit;/s);
   assert.match(stylesheet, /\.commit-heading-actions\s*{[^}]*align-items: flex-start;/s);
   assert.doesNotMatch(stylesheet, /history-stats|commit-message-popover/);
+  assert.match(historyRoute, /requestedRefFetchedAt \?\? Date\.now\(\)/);
+  assert.doesNotMatch(historyRoute, /fetchedAt: new Date\(\)\.toISOString\(\)/);
+  assert.match(database, /writeCachedCommitBatch\([\s\S]*fetchedAt: number/);
+  assert.match(readme, /Refreshing is request-driven rather than scheduled/);
 
   await Promise.all([
     assert.rejects(access(new URL("../app/chatgpt-auth.ts", import.meta.url))),

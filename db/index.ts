@@ -96,11 +96,14 @@ export async function readCachedCommitBatch(ref: string): Promise<CachedCommitBa
     : null;
 }
 
-export async function writeCachedCommitBatch(ref: string, commits: GitHubCommit[]): Promise<void> {
+export async function writeCachedCommitBatch(
+  ref: string,
+  commits: GitHubCommit[],
+  fetchedAt: number,
+): Promise<void> {
   const db = database();
   if (!db || commits.length === 0) return;
 
-  const cachedAt = Date.now();
   const statements = commits.map((commit) =>
     db
       .prepare(
@@ -116,7 +119,7 @@ export async function writeCachedCommitBatch(ref: string, commits: GitHubCommit[
         commit.commit.author.name,
         commit.commit.author.date,
         JSON.stringify(commit.parents.map((parent) => parent.sha)),
-        cachedAt,
+        fetchedAt,
       ),
   );
 
@@ -132,6 +135,6 @@ export async function writeCachedCommitBatch(ref: string, commits: GitHubCommit[
          commit_shas_json = excluded.commit_shas_json,
          fetched_at = excluded.fetched_at`,
     )
-    .bind(ref, JSON.stringify(commits.map((commit) => commit.sha)), cachedAt)
+    .bind(ref, JSON.stringify(commits.map((commit) => commit.sha)), fetchedAt)
     .run();
 }
