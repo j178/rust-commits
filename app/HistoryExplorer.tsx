@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import type {
   HistoryItem,
   HistoryResponse,
@@ -111,22 +111,51 @@ const fallbackItems: HistoryItem[] = [
   },
 ];
 
-const dayFormatter = new Intl.DateTimeFormat("en", {
+const utcDayFormatter = new Intl.DateTimeFormat("en", {
   month: "short",
   day: "numeric",
   year: "numeric",
   timeZone: "UTC",
 });
 
-const timeFormatter = new Intl.DateTimeFormat("en", {
-  hour: "2-digit",
-  minute: "2-digit",
-  hour12: false,
-  timeZone: "UTC",
+const localDayFormatter = new Intl.DateTimeFormat("en", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
 });
 
-function dayKey(date: string) {
+const utcTimeFormatter = new Intl.DateTimeFormat("en", {
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
+  timeZone: "UTC",
+  timeZoneName: "short",
+});
+
+const localTimeFormatter = new Intl.DateTimeFormat("en", {
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
+  timeZoneName: "short",
+});
+
+const subscribeToHydration = () => () => undefined;
+
+function useBrowserTimeZone() {
+  return useSyncExternalStore(
+    subscribeToHydration,
+    () => true,
+    () => false,
+  );
+}
+
+function utcDayKey(date: string) {
   return date.slice(0, 10);
+}
+
+function localDayKey(date: string) {
+  const value = new Date(date);
+  return `${value.getFullYear()}-${value.getMonth()}-${value.getDate()}`;
 }
 
 function matchesQuery(item: HistoryItem, query: string) {
@@ -254,23 +283,23 @@ function RollupList({ item }: { item: HistoryItem }) {
   );
 }
 
-function CommitCard({ item }: { item: HistoryItem }) {
+function CommitCard({
+  item,
+  browserTimeZone,
+}: {
+  item: HistoryItem;
+  browserTimeZone: boolean;
+}) {
   const isRollup = item.kind === "rollup";
+  const commitTime = (browserTimeZone ? localTimeFormatter : utcTimeFormatter).format(
+    new Date(item.date),
+  );
 
   return (
     <article className={`commit-card ${isRollup ? "is-rollup" : ""}`}>
       <span className="timeline-node" aria-hidden="true" />
-      <div className="commit-card-topline">
-        <div className="badges">
-          <span className={`badge ${isRollup ? "rollup-badge" : ""}`}>
-            {isRollup ? "rollup" : item.kind === "direct" ? "direct" : "merge"}
-          </span>
-        </div>
-        <span className="commit-time">{timeFormatter.format(new Date(item.date))} UTC</span>
-      </div>
-
       <div className="commit-heading">
-        <div>
+        <div className="commit-heading-copy">
           <p className="pr-label">
             <span>{item.pr ? `${isRollup ? "ROLLUP PR" : "PR"} #${item.pr}` : "MAINLINE COMMIT"}</span>
             <a
@@ -283,22 +312,23 @@ function CommitCard({ item }: { item: HistoryItem }) {
               {item.sha.slice(0, 7)}
             </a>
           </p>
-          <h2>{item.title}</h2>
+          {isRollup ? <RollupList item={item} /> : <h2>{item.title}</h2>}
         </div>
-        <a
-          className="open-commit"
-          href={item.url}
-          target="_blank"
-          rel="noreferrer"
-          aria-label={`Open commit ${item.sha.slice(0, 7)} on GitHub`}
-        >
-          <ExternalArrow />
-        </a>
+        <div className="commit-heading-actions">
+          <time className="commit-time" dateTime={item.date}>{commitTime}</time>
+          <a
+            className="open-commit"
+            href={item.url}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={`Open commit ${item.sha.slice(0, 7)} on GitHub`}
+          >
+            <ExternalArrow />
+          </a>
+        </div>
       </div>
 
       <CommitMeta item={item} />
-
-      {isRollup && <RollupList item={item} />}
 
       <div className="commit-footer">
         <CommitMessage item={item} />
@@ -308,6 +338,7 @@ function CommitCard({ item }: { item: HistoryItem }) {
 }
 
 export function HistoryExplorer() {
+  const browserTimeZone = useBrowserTimeZone();
   const [items, setItems] = useState<HistoryItem[]>(fallbackItems);
   const [nextSha, setNextSha] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -445,18 +476,22 @@ export function HistoryExplorer() {
 
         <div className="timeline">
           {filteredItems.map((item) => {
-            const currentDay = dayKey(item.date);
+            const currentDay = browserTimeZone ? localDayKey(item.date) : utcDayKey(item.date);
             const showDay = currentDay !== previousDay;
             previousDay = currentDay;
             return (
               <div className="timeline-entry" key={item.sha}>
                 {showDay && (
                   <div className="day-label">
-                    <span>{dayFormatter.format(new Date(item.date))}</span>
+                    <span>
+                      {(browserTimeZone ? localDayFormatter : utcDayFormatter).format(
+                        new Date(item.date),
+                      )}
+                    </span>
                     <i />
                   </div>
                 )}
-                <CommitCard item={item} />
+                <CommitCard item={item} browserTimeZone={browserTimeZone} />
               </div>
             );
           })}

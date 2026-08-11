@@ -522,7 +522,6 @@ a {
   border-top: 1px solid #bcb4a8;
 }
 
-.commit-card-topline,
 .commit-heading,
 .commit-meta,
 .commit-footer,
@@ -532,34 +531,9 @@ a {
   align-items: center;
 }
 
-.commit-card-topline,
 .commit-heading,
 .commit-footer {
   justify-content: space-between;
-}
-
-.commit-card-topline {
-  margin-bottom: 24px;
-}
-
-.badges {
-  display: flex;
-  gap: 7px;
-}
-
-.badge {
-  display: inline-flex;
-  align-items: center;
-  min-height: 23px;
-  padding: 0 8px;
-  font: 750 9px/1 var(--font-mono);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.badge {
-  background: #e0eadb;
-  color: #52634d;
 }
 
 .commit-time,
@@ -571,11 +545,24 @@ a {
 
 .commit-time {
   color: var(--muted);
+  white-space: nowrap;
 }
 
 .commit-heading {
   align-items: flex-start;
   gap: 30px;
+}
+
+.commit-heading-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.commit-heading-actions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 13px;
 }
 
 .pr-label {
@@ -772,11 +759,6 @@ a {
   border-color: var(--rust);
 }
 
-.commit-card.is-rollup .rollup-badge {
-  background: var(--rust);
-  color: white;
-}
-
 .commit-card.is-rollup .commit-time {
   color: #9d978e;
 }
@@ -796,7 +778,7 @@ a {
 }
 
 .rollup-details {
-  margin-top: 24px;
+  margin-top: 0;
   border-top: 1px solid #47433e;
   border-bottom: 1px solid #47433e;
 }
@@ -922,7 +904,6 @@ a {
 }
 
 .commit-card.is-rollup .commit-meta {
-  margin-top: 20px;
   color: #858078;
 }
 
@@ -1214,10 +1195,6 @@ summary:focus-visible {
   .open-commit {
     width: 34px;
     height: 34px;
-  }
-
-  .commit-card-topline {
-    margin-bottom: 19px;
   }
 
   .commit-time {
