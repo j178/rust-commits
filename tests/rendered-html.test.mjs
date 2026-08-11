@@ -30,6 +30,9 @@ test("server-renders the Rust Mainline product", async () => {
 
   const html = await response.text();
   assert.match(html, /<title>Rust Mainline/);
+  assert.match(html, /href="\/favicon\.ico"/);
+  assert.match(html, /href="\/favicon-32x32\.png"/);
+  assert.match(html, /href="\/apple-touch-icon\.png"/);
   assert.match(html, /Rust,/);
   assert.match(html, /on main\./);
   assert.match(html, /class="hero-title"/);
@@ -114,6 +117,9 @@ test("configures the durable cache and lean toolchain", async () => {
   assert.match(readme, /Refreshing is request-driven rather than scheduled/);
 
   await Promise.all([
+    access(new URL("../public/favicon.ico", import.meta.url)),
+    access(new URL("../public/favicon-32x32.png", import.meta.url)),
+    access(new URL("../public/apple-touch-icon.png", import.meta.url)),
     assert.rejects(access(new URL("../app/chatgpt-auth.ts", import.meta.url))),
     assert.rejects(access(new URL("../eslint.config.mjs", import.meta.url))),
     assert.rejects(access(new URL("../examples/d1", import.meta.url))),
