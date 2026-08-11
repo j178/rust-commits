@@ -27,6 +27,14 @@ export type HistoryResponse = {
   fetchedAt: string;
 };
 
+export type PullRequestDetails = {
+  number: number;
+  title: string;
+  body: string;
+  author: string;
+  url: string;
+};
+
 export type GitHubCommit = {
   sha: string;
   html_url: string;

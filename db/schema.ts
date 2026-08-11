@@ -15,3 +15,12 @@ export const githubCommitPages = sqliteTable("github_commit_pages", {
   commitShasJson: text("commit_shas_json").notNull(),
   fetchedAt: integer("fetched_at").notNull(),
 });
+
+export const githubPullRequests = sqliteTable("github_pull_requests", {
+  number: integer("number").primaryKey(),
+  htmlUrl: text("html_url").notNull(),
+  title: text("title").notNull(),
+  body: text("body").notNull(),
+  authorLogin: text("author_login").notNull(),
+  cachedAt: integer("cached_at").notNull(),
+});

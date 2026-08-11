@@ -4,10 +4,13 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import type {
   HistoryItem,
   HistoryResponse,
+  PullRequestDetails,
   RollupEntry,
 } from "./lib/history";
 
 const RUST_REPO = "https://github.com/rust-lang/rust";
+const pullRequestDetailsCache = new Map<number, PullRequestDetails>();
+const pullRequestDetailsRequests = new Map<number, Promise<PullRequestDetails>>();
 
 const firstRollup: RollupEntry[] = [
   { pr: 158404, title: "trait_solver: normalize next-gen region constraints", status: "merged" },
@@ -205,15 +208,65 @@ function ExternalArrow() {
   return <span aria-hidden="true">↗</span>;
 }
 
-function CommitMessage({ item }: { item: HistoryItem }) {
+async function requestPullRequestDetails(number: number) {
+  const cached = pullRequestDetailsCache.get(number);
+  if (cached) return cached;
+
+  const pending = pullRequestDetailsRequests.get(number);
+  if (pending) return pending;
+
+  const request = fetch(`/api/pull?number=${number}`).then(async (response) => {
+    if (!response.ok) throw new Error("Pull request details are unavailable.");
+    const details = (await response.json()) as PullRequestDetails;
+    pullRequestDetailsCache.set(number, details);
+    return details;
+  });
+  pullRequestDetailsRequests.set(number, request);
+
+  try {
+    return await request;
+  } finally {
+    pullRequestDetailsRequests.delete(number);
+  }
+}
+
+function DetailPopover({
+  id,
+  label,
+  title,
+  meta,
+  body,
+}: {
+  id: string;
+  label: string;
+  title?: string;
+  meta?: string;
+  body: string;
+}) {
   return (
-    <details className="commit-message">
-      <summary>
-        <span className="message-chevron" aria-hidden="true" />
-        Commit message
-      </summary>
-      <pre>{item.message}</pre>
-    </details>
+    <div className="detail-popover" id={id} role="tooltip">
+      <div className="detail-panel">
+        <span className="detail-label">{label}</span>
+        {title && <strong className="detail-title">{title}</strong>}
+        {meta && <span className="detail-meta">{meta}</span>}
+        <pre>{body}</pre>
+      </div>
+    </div>
+  );
+}
+
+function CommitTitle({ item }: { item: HistoryItem }) {
+  const messageId = `commit-message-${item.sha}`;
+
+  return (
+    <div className="commit-title-preview">
+      <h2>
+        <button type="button" className="commit-message-trigger" aria-describedby={messageId}>
+          {item.title}
+        </button>
+      </h2>
+      <DetailPopover id={messageId} label="Commit message" body={item.message} />
+    </div>
   );
 }
 
@@ -240,6 +293,66 @@ function CommitMeta({ item }: { item: HistoryItem }) {
   );
 }
 
+function RollupEntryLink({
+  entry,
+  indexLabel,
+  rollupPr,
+}: {
+  entry: RollupEntry;
+  indexLabel: string;
+  rollupPr: number | null;
+}) {
+  const cached = pullRequestDetailsCache.get(entry.pr) ?? null;
+  const [details, setDetails] = useState<PullRequestDetails | null>(cached);
+  const [loadState, setLoadState] = useState<"idle" | "loading" | "ready" | "error">(
+    cached ? "ready" : "idle",
+  );
+  const detailsId = `pull-details-${rollupPr ?? "rollup"}-${entry.pr}`;
+
+  function loadDetails() {
+    if (loadState === "loading" || loadState === "ready") return;
+    setLoadState("loading");
+    void requestPullRequestDetails(entry.pr)
+      .then((value) => {
+        setDetails(value);
+        setLoadState("ready");
+      })
+      .catch(() => setLoadState("error"));
+  }
+
+  const detailBody = details
+    ? details.body || "No PR description was provided."
+    : loadState === "error"
+      ? "PR details are currently unavailable. Open the PR on GitHub for the full context."
+      : "Loading PR details…";
+
+  return (
+    <a
+      className={`rollup-entry ${entry.status === "failed" ? "failed" : ""}`}
+      href={`${RUST_REPO}/pull/${entry.pr}`}
+      target="_blank"
+      rel="noreferrer"
+      aria-describedby={detailsId}
+      onMouseEnter={loadDetails}
+      onFocus={loadDetails}
+    >
+      <span className="rollup-index">{indexLabel}</span>
+      <span className="rollup-copy">
+        <strong>{entry.title}</strong>
+        <span>PR #{entry.pr}</span>
+      </span>
+      <DetailPopover
+        id={detailsId}
+        label={entry.status === "merged" ? "Included pull request" : "Failed candidate"}
+        title={details?.title ?? entry.title}
+        meta={details ? `PR #${entry.pr} · @${details.author}` : `PR #${entry.pr}`}
+        body={detailBody}
+      />
+      <ExternalArrow />
+    </a>
+  );
+}
+
 function RollupList({ item }: { item: HistoryItem }) {
   const successful = item.rollup.filter((entry) => entry.status === "merged");
   const failed = item.rollup.filter((entry) => entry.status === "failed");
@@ -256,46 +369,26 @@ function RollupList({ item }: { item: HistoryItem }) {
           <span className="expand-mark" aria-hidden="true" />
           <strong>{includedLabel}</strong>
         </span>
-        <span className="summary-action" aria-hidden="true">
-          <span className="summary-action-closed">View PRs</span>
-          <span className="summary-action-open">Hide PRs</span>
-        </span>
       </summary>
       <div className="rollup-list">
         {successful.map((entry, index) => (
-          <a
-            className="rollup-entry"
-            href={`${RUST_REPO}/pull/${entry.pr}`}
-            target="_blank"
-            rel="noreferrer"
+          <RollupEntryLink
             key={entry.pr}
-          >
-            <span className="rollup-index">{String(index + 1).padStart(2, "0")}</span>
-            <span className="rollup-copy">
-              <strong>{entry.title}</strong>
-              <span>PR #{entry.pr}</span>
-            </span>
-            <ExternalArrow />
-          </a>
+            entry={entry}
+            indexLabel={String(index + 1).padStart(2, "0")}
+            rollupPr={item.pr}
+          />
         ))}
         {failed.length > 0 && (
           <div className="rollup-list-divider">Failed candidates · not in this commit</div>
         )}
         {failed.map((entry) => (
-          <a
-            className="rollup-entry failed"
-            href={`${RUST_REPO}/pull/${entry.pr}`}
-            target="_blank"
-            rel="noreferrer"
+          <RollupEntryLink
             key={entry.pr}
-          >
-            <span className="rollup-index">×</span>
-            <span className="rollup-copy">
-              <strong>{entry.title}</strong>
-              <span>PR #{entry.pr}</span>
-            </span>
-            <ExternalArrow />
-          </a>
+            entry={entry}
+            indexLabel="×"
+            rollupPr={item.pr}
+          />
         ))}
       </div>
     </details>
@@ -331,7 +424,7 @@ function CommitCard({
               {item.sha.slice(0, 7)}
             </a>
           </p>
-          {isRollup ? <RollupList item={item} /> : <h2>{item.title}</h2>}
+          {isRollup ? <RollupList item={item} /> : <CommitTitle item={item} />}
         </div>
         <div className="commit-heading-actions">
           <time className="commit-time" dateTime={item.date}>{commitTime}</time>
@@ -348,12 +441,6 @@ function CommitCard({
       </div>
 
       <CommitMeta item={item} />
-
-      {!isRollup && (
-        <div className="commit-footer">
-          <CommitMessage item={item} />
-        </div>
-      )}
     </article>
   );
 }
@@ -482,10 +569,6 @@ export function HistoryExplorer() {
               <button type="button" onClick={() => setQuery("")} aria-label="Clear search">×</button>
             )}
           </label>
-          <div className="view-rules" aria-label="Active history rules">
-            <span><b>✓</b> first parent</span>
-            <span><b>✓</b> inner commits folded</span>
-          </div>
           <div className={`live-status ${status === "snapshot" ? "is-snapshot" : ""}`} aria-live="polite">
             <span className="sync-dot" aria-hidden="true" />
             <span className="sync-copy">

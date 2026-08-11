@@ -1,5 +1,5 @@
 import { env } from "cloudflare:workers";
-import type { GitHubCommit } from "@/app/lib/history";
+import type { GitHubCommit, PullRequestDetails } from "@/app/lib/history";
 
 export type CachedCommitBatch = {
   commits: GitHubCommit[];
@@ -18,6 +18,14 @@ type CommitRow = {
 type PageRow = {
   commit_shas_json: string;
   fetched_at: number;
+};
+
+type PullRequestRow = {
+  number: number;
+  html_url: string;
+  title: string;
+  body: string;
+  author_login: string;
 };
 
 function database() {
@@ -136,5 +144,54 @@ export async function writeCachedCommitBatch(
          fetched_at = excluded.fetched_at`,
     )
     .bind(ref, JSON.stringify(commits.map((commit) => commit.sha)), fetchedAt)
+    .run();
+}
+
+export async function readCachedPullRequest(number: number): Promise<PullRequestDetails | null> {
+  const db = database();
+  if (!db) return null;
+
+  const row = await db
+    .prepare(
+      `SELECT number, html_url, title, body, author_login
+       FROM github_pull_requests
+       WHERE number = ?`,
+    )
+    .bind(number)
+    .first<PullRequestRow>();
+
+  return row
+    ? {
+        number: row.number,
+        title: row.title,
+        body: row.body,
+        author: row.author_login,
+        url: row.html_url,
+      }
+    : null;
+}
+
+export async function writeCachedPullRequest(
+  pullRequest: PullRequestDetails,
+  cachedAt: number,
+): Promise<void> {
+  const db = database();
+  if (!db) return;
+
+  await db
+    .prepare(
+      `INSERT INTO github_pull_requests
+         (number, html_url, title, body, author_login, cached_at)
+       VALUES (?, ?, ?, ?, ?, ?)
+       ON CONFLICT(number) DO NOTHING`,
+    )
+    .bind(
+      pullRequest.number,
+      pullRequest.url,
+      pullRequest.title,
+      pullRequest.body,
+      pullRequest.author,
+      cachedAt,
+    )
     .run();
 }

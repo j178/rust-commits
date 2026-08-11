@@ -33,7 +33,8 @@ reaches the Worker after the D1 entry expires fetches GitHub and updates the
 cache. Stale data is used if GitHub is temporarily unavailable. A bundled
 snapshot keeps the first render useful if both services are unavailable. Set
 `GITHUB_TOKEN` in the hosted runtime only if higher GitHub API limits are
-needed.
+needed. Rollup PR descriptions are loaded lazily through `/api/pull` when a
+visitor first hovers or focuses an entry, then persisted in D1 for later views.
 
 ## Deployment
 
