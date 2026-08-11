@@ -398,9 +398,8 @@ export function HistoryExplorer() {
       <section className="hero" id="top">
         <div className="hero-copy">
           <p className="eyebrow"><span /> FIRST-PARENT HISTORY</p>
-          <h1>
-            Rust,
-            <br />
+          <h1 className="hero-title">
+            <span>Rust,</span>
             <em>on main.</em>
           </h1>
           <p className="hero-description">
