@@ -376,14 +376,14 @@ export function HistoryExplorer() {
 
       <section className="hero" id="top">
         <div className="hero-copy">
-          <p className="eyebrow"><span /> FIRST-PARENT VIEW</p>
+          <p className="eyebrow"><span /> FIRST-PARENT HISTORY</p>
           <h1>
-            The history Rust
+            Rust,
             <br />
-            <em>actually shipped.</em>
+            <em>on main.</em>
           </h1>
           <p className="hero-description">
-            One clean line per merged PR. Rollups unfold on demand; every noisy inner commit stays folded away.
+            Merged PRs without the inner-commit noise. Rollups unfold on demand.
           </p>
         </div>
         <div className="hero-diagram" aria-label="A diagram showing noisy commits folded into a clean mainline">

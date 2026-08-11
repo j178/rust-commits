@@ -30,7 +30,8 @@ test("server-renders the Rust Mainline product", async () => {
 
   const html = await response.text();
   assert.match(html, /<title>Rust Mainline/);
-  assert.match(html, /The history Rust/);
+  assert.match(html, /Rust,/);
+  assert.match(html, /on main\./);
   assert.match(html, /Mainline history/);
   assert.match(html, /Optimize new solver unification table ops/);
   assert.match(html, /Included pull requests/);

@@ -118,7 +118,7 @@ a {
 }
 
 .hero-copy {
-  max-width: 900px;
+  max-width: 700px;
 }
 
 .eyebrow,
@@ -146,9 +146,9 @@ a {
 }
 
 .hero h1 {
-  margin: 27px 0 27px;
-  font-size: clamp(58px, 7.2vw, 112px);
-  line-height: 0.87;
+  margin: 22px 0 21px;
+  font-size: clamp(58px, 6.4vw, 96px);
+  line-height: 0.9;
   letter-spacing: -0.075em;
   font-weight: 760;
 }
@@ -161,11 +161,11 @@ a {
 }
 
 .hero-description {
-  max-width: 610px;
+  max-width: 540px;
   margin: 0;
   color: #ada79e;
-  font-size: clamp(17px, 1.6vw, 21px);
-  line-height: 1.55;
+  font-size: clamp(16px, 1.4vw, 19px);
+  line-height: 1.5;
   letter-spacing: -0.015em;
 }
 
