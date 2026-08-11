@@ -369,7 +369,7 @@ a {
 .live-status {
   min-width: 210px;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: flex-end;
   gap: 10px;
   white-space: nowrap;
@@ -378,7 +378,7 @@ a {
 .sync-dot {
   width: 7px;
   height: 7px;
-  margin-top: 1px;
+  margin-top: 0;
   flex: 0 0 auto;
   border-radius: 50%;
   background: #739269;
@@ -1134,10 +1134,6 @@ summary:focus-visible {
     display: flex;
     align-items: center;
     justify-content: flex-start;
-  }
-
-  .sync-dot {
-    margin-top: 0;
   }
 
   .sync-copy {

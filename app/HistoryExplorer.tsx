@@ -238,7 +238,7 @@ function DetailPopover({
   body,
 }: {
   id: string;
-  label: string;
+  label?: string;
   title?: string;
   meta?: string;
   body: string;
@@ -246,7 +246,7 @@ function DetailPopover({
   return (
     <div className="detail-popover" id={id} role="tooltip">
       <div className="detail-panel">
-        <span className="detail-label">{label}</span>
+        {label && <span className="detail-label">{label}</span>}
         {title && <strong className="detail-title">{title}</strong>}
         {meta && <span className="detail-meta">{meta}</span>}
         <pre>{body}</pre>
@@ -265,7 +265,7 @@ function CommitTitle({ item }: { item: HistoryItem }) {
           {item.title}
         </button>
       </h2>
-      <DetailPopover id={messageId} label="Commit message" body={item.message} />
+      <DetailPopover id={messageId} body={item.message} />
     </div>
   );
 }
@@ -343,7 +343,7 @@ function RollupEntryLink({
       </span>
       <DetailPopover
         id={detailsId}
-        label={entry.status === "merged" ? "Included pull request" : "Failed candidate"}
+        label={entry.status === "failed" ? "Failed candidate" : undefined}
         title={details?.title ?? entry.title}
         meta={details ? `PR #${entry.pr} · @${details.author}` : `PR #${entry.pr}`}
         body={detailBody}

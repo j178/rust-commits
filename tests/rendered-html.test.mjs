@@ -49,7 +49,6 @@ test("server-renders the Rust Mainline product", async () => {
   assert.doesNotMatch(html, /class="summary-copy"/);
   assert.doesNotMatch(html, />1 failed candidate was left out</);
   assert.doesNotMatch(html, />Combined into this mainline commit</);
-  assert.match(html, /Commit message/);
   assert.match(html, /class="commit-message-trigger"/);
   assert.match(html, /class="detail-popover"[^>]*role="tooltip"/);
   assert.match(html, /Loading PR details…/);
@@ -57,6 +56,7 @@ test("server-renders the Rust Mainline product", async () => {
   assert.doesNotMatch(html, /history-stats/);
   assert.doesNotMatch(html, /<details class="commit-message">/);
   assert.doesNotMatch(html, /View PRs|Hide PRs|class="summary-action"/);
+  assert.doesNotMatch(html, />Included pull request<|>Commit message</);
   assert.doesNotMatch(html, /class="view-rules"/);
   assert.doesNotMatch(html, /One tested batch on the mainline/);
   assert.doesNotMatch(html, /commit-card-topline/);
@@ -104,7 +104,8 @@ test("configures the durable cache and lean toolchain", async () => {
   assert.match(pullMigration, /CREATE TABLE `github_pull_requests`/);
   assert.match(stylesheet, /h1,\s+h2,\s+h3,\s+h4,\s+h5,\s+h6\s*{[^}]*font-weight: inherit;/s);
   assert.match(stylesheet, /\.commit-heading-actions\s*{[^}]*align-items: flex-start;/s);
-  assert.match(stylesheet, /\.sync-dot\s*{[^}]*margin-top: 1px;/s);
+  assert.match(stylesheet, /\.live-status\s*{[^}]*align-items: center;/s);
+  assert.match(stylesheet, /\.sync-dot\s*{[^}]*margin-top: 0;/s);
   assert.doesNotMatch(stylesheet, /\.rollup-details\s*{[^}]*border-(?:top|bottom)/s);
   assert.doesNotMatch(stylesheet, /history-stats|commit-message-popover|view-rules|summary-action|commit-footer/);
   assert.match(historyRoute, /requestedRefFetchedAt \?\? Date\.now\(\)/);
