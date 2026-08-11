@@ -99,7 +99,7 @@ function matchesQuery(item: HistoryItem, query: string) {
 }
 
 function ExternalArrow() {
-  return <span className="external-arrow" aria-hidden="true">↗</span>;
+  return <span className="external-arrow" aria-hidden="true" />;
 }
 
 async function fetchHistoryPage(url: string, signal?: AbortSignal) {

@@ -40,6 +40,8 @@ test("server-renders the Rust Mainline product", async () => {
   assert.match(html, /Syncing GitHub/);
   assert.match(html, /Checking edge cache/);
   assert.match(html, /class="sync-copy"/);
+  assert.match(html, /class="external-arrow"/);
+  assert.doesNotMatch(html, /↗/);
   assert.match(html, /Optimize new solver unification table ops/);
   assert.match(html, /<details class="rollup-details">/);
   assert.match(html, /9 pull requests included/);
