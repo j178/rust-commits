@@ -265,7 +265,16 @@ function CommitCard({ item }: { item: HistoryItem }) {
       <div className="commit-heading">
         <div>
           <p className="pr-label">
-            {item.pr ? `${isRollup ? "ROLLUP PR" : "PR"} #${item.pr}` : "MAINLINE COMMIT"}
+            <span>{item.pr ? `${isRollup ? "ROLLUP PR" : "PR"} #${item.pr}` : "MAINLINE COMMIT"}</span>
+            <a
+              className="commit-ref"
+              href={item.url}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={`Open commit ${item.sha.slice(0, 7)} on GitHub`}
+            >
+              {item.sha.slice(0, 7)}
+            </a>
           </p>
           <h2>{item.title}</h2>
         </div>
@@ -286,10 +295,6 @@ function CommitCard({ item }: { item: HistoryItem }) {
 
       <div className="commit-footer">
         <CommitMessage item={item} />
-        <a href={item.url} target="_blank" rel="noreferrer" className="sha-link">
-          <span className="commit-glyph" aria-hidden="true">◆</span>
-          {item.sha.slice(0, 7)}
-        </a>
       </div>
     </article>
   );

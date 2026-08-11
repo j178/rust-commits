@@ -573,8 +573,24 @@ a {
 
 .pr-label {
   margin: 0 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
   color: var(--rust-dark);
   font-weight: 750;
+}
+
+.commit-ref {
+  padding-left: 9px;
+  border-left: 1px solid #c9c1b5;
+  color: #918a80;
+  font-weight: 550;
+  letter-spacing: 0.02em;
+  transition: color 160ms ease;
+}
+
+.commit-ref:hover {
+  color: var(--rust-dark);
 }
 
 .commit-heading h2 {
@@ -695,25 +711,6 @@ a {
   background: #eee9df;
   border-left: 2px solid var(--rust);
   font: 500 11px/1.6 var(--font-mono);
-}
-
-.sha-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  margin-left: auto;
-  color: #746d63;
-  font: 600 10px/1 var(--font-mono);
-  transition: color 160ms ease;
-}
-
-.sha-link:hover {
-  color: var(--rust-dark);
-}
-
-.commit-glyph {
-  color: var(--rust);
-  font-size: 7px;
 }
 
 .commit-card.is-rollup {
@@ -900,8 +897,13 @@ a {
   color: var(--ink);
 }
 
-.commit-card.is-rollup .sha-link {
-  color: #8f8981;
+.commit-card.is-rollup .commit-ref {
+  border-left-color: #4f4c47;
+  color: #817c74;
+}
+
+.commit-card.is-rollup .commit-ref:hover {
+  color: var(--paper);
 }
 
 .commit-card.is-rollup .commit-message summary {
