@@ -755,12 +755,10 @@ a {
 
 .rollup-details {
   margin-top: 0;
-  border-top: 1px solid #47433e;
-  border-bottom: 1px solid #47433e;
 }
 
 .rollup-details summary {
-  min-height: 62px;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -847,7 +845,7 @@ a {
 }
 
 .rollup-list {
-  padding: 0 0 13px 33px;
+  padding: 7px 0 13px 33px;
 }
 
 .rollup-list-divider {
