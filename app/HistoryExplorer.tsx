@@ -180,29 +180,15 @@ function ExternalArrow() {
   return <span aria-hidden="true">↗</span>;
 }
 
-function displayCommitMessage(item: HistoryItem) {
-  if (item.kind !== "rollup") return item.message;
-
-  const structuredList = item.message.search(/^(?:Successful|Failed) merges:\s*$/m);
-  return structuredList >= 0 ? item.message.slice(0, structuredList).trimEnd() : item.message;
-}
-
 function CommitMessage({ item }: { item: HistoryItem }) {
-  const messageId = `commit-message-${item.sha}`;
-
   return (
-    <div className="commit-message">
-      <button type="button" className="commit-message-trigger" aria-describedby={messageId}>
-        <span className="message-dots" aria-hidden="true">•••</span>
+    <details className="commit-message">
+      <summary>
+        <span className="message-chevron" aria-hidden="true" />
         Commit message
-      </button>
-      <div className="commit-message-popover" id={messageId} role="tooltip">
-        <div className="commit-message-panel">
-          <span className="message-panel-label">Raw commit message</span>
-          <pre>{displayCommitMessage(item)}</pre>
-        </div>
-      </div>
-    </div>
+      </summary>
+      <pre>{item.message}</pre>
+    </details>
   );
 }
 
@@ -330,9 +316,11 @@ function CommitCard({
 
       <CommitMeta item={item} />
 
-      <div className="commit-footer">
-        <CommitMessage item={item} />
-      </div>
+      {!isRollup && (
+        <div className="commit-footer">
+          <CommitMessage item={item} />
+        </div>
+      )}
     </article>
   );
 }
@@ -342,7 +330,6 @@ export function HistoryExplorer() {
   const [items, setItems] = useState<HistoryItem[]>(fallbackItems);
   const [nextSha, setNextSha] = useState<string | null>(null);
   const [query, setQuery] = useState("");
-  const [foldedCount, setFoldedCount] = useState(95);
   const [status, setStatus] = useState<"loading" | "live" | "snapshot" | "loading-more">("loading");
 
   useEffect(() => {
@@ -356,7 +343,6 @@ export function HistoryExplorer() {
         if (data.items.length > 0) {
           setItems(data.items);
           setNextSha(data.nextSha);
-          setFoldedCount(data.foldedCount);
           setStatus("live");
         }
       } catch (error) {
@@ -376,8 +362,6 @@ export function HistoryExplorer() {
     [items, normalizedQuery],
   );
 
-  const rollupPrs = items.reduce((count, item) => count + item.rollupCount, 0);
-
   async function loadOlder() {
     if (!nextSha || status === "loading-more") return;
     setStatus("loading-more");
@@ -391,7 +375,6 @@ export function HistoryExplorer() {
         return [...current, ...data.items.filter((item) => !known.has(item.sha))];
       });
       setNextSha(data.nextSha);
-      setFoldedCount((current) => current + data.foldedCount);
       setStatus("live");
     } catch {
       setStatus("snapshot");
@@ -442,11 +425,6 @@ export function HistoryExplorer() {
           <div>
             <p className="section-kicker">THE LOG, MINUS THE NOISE</p>
             <h2 id="history-title">Mainline history</h2>
-          </div>
-          <div className="history-stats" aria-label="Loaded history statistics">
-            <div><strong>{items.length}</strong><span>mainline merges</span></div>
-            <div><strong>{rollupPrs}</strong><span>PRs in rollups</span></div>
-            <div><strong>{foldedCount}</strong><span>inner commits folded</span></div>
           </div>
         </div>
 

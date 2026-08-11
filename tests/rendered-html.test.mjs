@@ -38,12 +38,18 @@ test("server-renders the Rust Mainline product", async () => {
   assert.match(html, /<details class="rollup-details">/);
   assert.match(html, /9<!-- --> merged/);
   assert.match(html, /Commit message/);
-  assert.match(html, /role="tooltip"/);
+  assert.match(html, /<details class="commit-message">/);
   assert.match(html, /Auto merge of #160801/);
+  assert.doesNotMatch(html, /history-stats/);
+  assert.doesNotMatch(html, /role="tooltip"/);
   assert.doesNotMatch(html, /One tested batch on the mainline/);
   assert.doesNotMatch(html, /commit-card-topline/);
   assert.doesNotMatch(html, /<h2>Rollup of \d+ pull requests<\/h2>/);
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton|Your site is taking shape/);
+
+  const rollupCards = html.match(/<article class="commit-card is-rollup">[\s\S]*?<\/article>/g) ?? [];
+  assert.ok(rollupCards.length > 0);
+  for (const card of rollupCards) assert.doesNotMatch(card, /commit-message/);
 });
 
 test("removes all starter-preview wiring", async () => {
@@ -60,10 +66,11 @@ test("removes all starter-preview wiring", async () => {
 });
 
 test("configures the durable cache and lean toolchain", async () => {
-  const [hostingJson, packageJson, migration] = await Promise.all([
+  const [hostingJson, packageJson, migration, stylesheet] = await Promise.all([
     readFile(new URL("../.openai/hosting.json", import.meta.url), "utf8"),
     readFile(new URL("../package.json", import.meta.url), "utf8"),
     readFile(new URL("../drizzle/0000_special_whiplash.sql", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
   ]);
 
   const hosting = JSON.parse(hostingJson);
@@ -73,6 +80,8 @@ test("configures the durable cache and lean toolchain", async () => {
   assert.doesNotMatch(packageJson, /eslint|tailwindcss/);
   assert.match(migration, /CREATE TABLE `github_commits`/);
   assert.match(migration, /CREATE TABLE `github_commit_pages`/);
+  assert.match(stylesheet, /h1,\s+h2,\s+h3,\s+h4,\s+h5,\s+h6\s*{[^}]*font-weight: inherit;/s);
+  assert.doesNotMatch(stylesheet, /history-stats|commit-message-popover/);
 
   await Promise.all([
     assert.rejects(access(new URL("../app/chatgpt-auth.ts", import.meta.url))),
