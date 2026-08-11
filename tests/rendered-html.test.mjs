@@ -82,6 +82,7 @@ test("configures the durable cache and lean toolchain", async () => {
   assert.match(migration, /CREATE TABLE `github_commits`/);
   assert.match(migration, /CREATE TABLE `github_commit_pages`/);
   assert.match(stylesheet, /h1,\s+h2,\s+h3,\s+h4,\s+h5,\s+h6\s*{[^}]*font-weight: inherit;/s);
+  assert.match(stylesheet, /\.commit-heading-actions\s*{[^}]*align-items: flex-start;/s);
   assert.doesNotMatch(stylesheet, /history-stats|commit-message-popover/);
 
   await Promise.all([
