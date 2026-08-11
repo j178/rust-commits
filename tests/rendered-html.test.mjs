@@ -43,6 +43,9 @@ test("server-renders the Rust Mainline product", async () => {
   assert.match(html, /1 failed candidate was left out/);
   assert.match(html, /Failed candidates · not in this commit/);
   assert.doesNotMatch(html, /Included pull requests|9<!-- --> merged|excluded/);
+  assert.doesNotMatch(html, /class="summary-copy"/);
+  assert.doesNotMatch(html, />1 failed candidate was left out</);
+  assert.doesNotMatch(html, />Combined into this mainline commit</);
   assert.match(html, /Commit message/);
   assert.match(html, /<details class="commit-message">/);
   assert.match(html, /Auto merge of #160801/);

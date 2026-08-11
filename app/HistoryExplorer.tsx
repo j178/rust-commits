@@ -254,12 +254,7 @@ function RollupList({ item }: { item: HistoryItem }) {
       >
         <span className="summary-label">
           <span className="expand-mark" aria-hidden="true" />
-          <span className="summary-copy">
-            <strong>{includedLabel}</strong>
-            <span>
-              {failed.length > 0 ? failedLabel : "Combined into this mainline commit"}
-            </span>
-          </span>
+          <strong>{includedLabel}</strong>
         </span>
         <span className="summary-action" aria-hidden="true">
           <span className="summary-action-closed">View PRs</span>
