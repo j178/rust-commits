@@ -456,7 +456,7 @@ a {
   margin-left: -83px;
   display: flex;
   align-items: center;
-  gap: 13px;
+  padding-left: 52px;
   color: var(--rust-dark);
   font: 700 10px/1 var(--font-mono);
   letter-spacing: 0.09em;
@@ -464,15 +464,15 @@ a {
 }
 
 .day-label span {
-  min-width: 70px;
-  padding-right: 10px;
+  padding: 0 10px 0 4px;
   background: var(--paper);
 }
 
 .day-label i {
+  position: absolute;
+  left: 30px;
   width: 8px;
   height: 8px;
-  margin-left: -53px;
   border-radius: 50%;
   background: var(--rust);
   box-shadow: 0 0 0 5px var(--paper);
@@ -540,8 +540,7 @@ a {
   gap: 7px;
 }
 
-.badge,
-.count-badge {
+.badge {
   display: inline-flex;
   align-items: center;
   min-height: 23px;
@@ -554,11 +553,6 @@ a {
 .badge {
   background: #e0eadb;
   color: #52634d;
-}
-
-.count-badge {
-  border: 1px solid rgba(243, 239, 231, 0.35);
-  color: #d3cdc3;
 }
 
 .commit-time,
@@ -712,15 +706,8 @@ a {
   color: white;
 }
 
-.rollup-description {
-  max-width: 710px;
-  margin: 15px 0 25px;
-  color: #aaa49b;
-  font-size: 14px;
-  line-height: 1.55;
-}
-
 .rollup-details {
+  margin-top: 24px;
   border-top: 1px solid #47433e;
   border-bottom: 1px solid #47433e;
 }
@@ -752,14 +739,28 @@ a {
 }
 
 .expand-mark {
+  position: relative;
+  flex: 0 0 auto;
   width: 22px;
   height: 22px;
-  display: grid;
-  place-items: center;
   border: 1px solid #716b63;
-  color: var(--rust);
-  font-size: 16px;
   transition: transform 160ms ease;
+}
+
+.expand-mark::before,
+.expand-mark::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 1px;
+  background: var(--rust);
+  transform: translate(-50%, -50%);
+}
+
+.expand-mark::after {
+  transform: translate(-50%, -50%) rotate(90deg);
 }
 
 .rollup-details[open] .expand-mark {
@@ -1079,10 +1080,11 @@ summary:focus-visible {
 
   .day-label {
     margin-left: -32px;
+    padding-left: 25px;
   }
 
   .day-label i {
-    margin-left: -77px;
+    left: 4px;
   }
 
   .commit-card {

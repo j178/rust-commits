@@ -176,10 +176,13 @@ function RollupList({ item }: { item: HistoryItem }) {
     <details className="rollup-details">
       <summary>
         <span className="summary-label">
-          <span className="expand-mark" aria-hidden="true">+</span>
-          Unfold {successful.length || item.rollupCount} merged PRs
+          <span className="expand-mark" aria-hidden="true" />
+          Included pull requests
         </span>
-        <span className="summary-hint">kept as one mainline commit</span>
+        <span className="summary-hint">
+          {successful.length || item.rollupCount} merged
+          {failed.length > 0 ? ` · ${failed.length} excluded` : ""}
+        </span>
       </summary>
       <div className="rollup-list">
         {successful.map((entry, index) => (
@@ -230,15 +233,16 @@ function CommitCard({ item }: { item: HistoryItem }) {
           <span className={`badge ${isRollup ? "rollup-badge" : ""}`}>
             {isRollup ? "rollup" : item.kind === "direct" ? "direct" : "merge"}
           </span>
-          {isRollup && <span className="count-badge">{item.rollupCount} PRs</span>}
         </div>
         <span className="commit-time">{timeFormatter.format(new Date(item.date))} UTC</span>
       </div>
 
       <div className="commit-heading">
         <div>
-          <p className="pr-label">{item.pr ? `PR #${item.pr}` : "MAINLINE COMMIT"}</p>
-          <h2>{isRollup ? `${item.rollupCount} pull requests, landed together` : item.title}</h2>
+          <p className="pr-label">
+            {item.pr ? `${isRollup ? "ROLLUP PR" : "PR"} #${item.pr}` : "MAINLINE COMMIT"}
+          </p>
+          <h2>{item.title}</h2>
         </div>
         <a
           className="open-commit"
@@ -251,13 +255,7 @@ function CommitCard({ item }: { item: HistoryItem }) {
         </a>
       </div>
 
-      {isRollup ? (
-        <p className="rollup-description">
-          One tested batch on the mainline. Expand it to inspect the PRs that were folded into this merge.
-        </p>
-      ) : (
-        <CommitMeta item={item} />
-      )}
+      {!isRollup && <CommitMeta item={item} />}
 
       {isRollup && <RollupList item={item} />}
 
