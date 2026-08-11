@@ -67,13 +67,10 @@ export async function GET(request: Request) {
   const traversed = new Set<string>();
   let cursor = requestedRef;
   let nextSha: string | null = null;
-  let requestedRefFetchedAt: number | null = null;
 
   try {
     batchLoop: for (let batchIndex = 0; batchIndex < MAX_BATCHES; batchIndex += 1) {
-      const batchResult = await fetchCommitBatch(cursor);
-      const batch = batchResult.commits;
-      requestedRefFetchedAt ??= batchResult.fetchedAt;
+      const batch = (await fetchCommitBatch(cursor)).commits;
       if (batch.length === 0) break;
 
       const bySha = new Map(batch.map((commit) => [commit.sha, commit]));
@@ -106,7 +103,6 @@ export async function GET(request: Request) {
     const payload: HistoryResponse = {
       items,
       nextSha,
-      fetchedAt: new Date(requestedRefFetchedAt ?? Date.now()).toISOString(),
     };
 
     return Response.json(payload, {

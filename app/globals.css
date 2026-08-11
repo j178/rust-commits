@@ -328,10 +328,6 @@ a {
   z-index: 10;
   min-height: 74px;
   padding: 12px;
-  display: grid;
-  grid-template-columns: minmax(260px, 1fr) auto;
-  gap: 12px;
-  align-items: center;
   background: rgba(243, 239, 231, 0.93);
   border-top: 1px solid var(--ink);
   border-bottom: 1px solid var(--line);
@@ -384,59 +380,6 @@ a {
   background: #e7e1d6;
   color: var(--ink);
   cursor: pointer;
-}
-
-.live-status {
-  min-width: 210px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
-  white-space: nowrap;
-}
-
-.sync-dot {
-  width: 7px;
-  height: 7px;
-  flex: 0 0 auto;
-  border-radius: 50%;
-  background: #739269;
-  box-shadow: 0 0 0 4px rgba(115, 146, 105, 0.13);
-}
-
-.sync-copy {
-  display: flex;
-  align-items: flex-start;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.sync-copy strong {
-  color: var(--sage-dark);
-  font: 700 9px/1 var(--font-mono);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.sync-copy > span {
-  color: #8b8479;
-  font: 500 8px/1 var(--font-mono);
-  letter-spacing: 0.035em;
-  text-transform: uppercase;
-}
-
-.sync-copy time {
-  color: #5f5951;
-  font-weight: 650;
-}
-
-.live-status.is-snapshot .sync-copy strong {
-  color: #99753d;
-}
-
-.live-status.is-snapshot .sync-dot {
-  background: #b8873f;
-  box-shadow: 0 0 0 4px rgba(184, 135, 63, 0.13);
 }
 
 .timeline {
@@ -887,13 +830,14 @@ a {
 }
 
 .rollup-index {
-  width: 25px;
+  flex: 0 0 25px;
   color: var(--sage);
   font: 600 9px/1 var(--font-mono);
 }
 
 .rollup-copy {
   min-width: 0;
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 5px;
@@ -1123,19 +1067,6 @@ summary:focus-visible {
   .toolbar {
     margin: 0 -16px;
     padding: 10px 16px;
-    grid-template-columns: 1fr;
-  }
-
-  .live-status {
-    min-width: 0;
-    padding: 2px 3px;
-    justify-content: flex-start;
-  }
-
-  .sync-copy {
-    align-items: baseline;
-    flex-direction: row;
-    gap: 8px;
   }
 
   .timeline {
@@ -1177,7 +1108,33 @@ summary:focus-visible {
   }
 
   .commit-heading {
-    gap: 15px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px 12px;
+  }
+
+  .commit-heading-copy {
+    display: contents;
+  }
+
+  .pr-label {
+    min-width: 0;
+    margin: 0;
+    grid-column: 1;
+    grid-row: 1;
+    flex-wrap: wrap;
+  }
+
+  .commit-heading-actions {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .commit-title-preview,
+  .rollup-details {
+    width: 100%;
+    grid-column: 1 / -1;
+    grid-row: 2;
   }
 
   .commit-heading h2 {
@@ -1212,7 +1169,6 @@ summary:focus-visible {
   }
 
   .rollup-copy strong {
-    max-width: 59vw;
     font-size: 12px;
   }
 

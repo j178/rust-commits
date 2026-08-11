@@ -37,9 +37,7 @@ test("server-renders the Rust Mainline product", async () => {
   assert.match(html, /on main\./);
   assert.match(html, /class="hero-title"/);
   assert.match(html, /Mainline history/);
-  assert.match(html, /Syncing GitHub/);
-  assert.match(html, /Checking edge cache/);
-  assert.match(html, /class="sync-copy"/);
+  assert.doesNotMatch(html, /GitHub synced|Syncing GitHub|Checking edge cache|class="sync-/);
   assert.match(html, /class="external-arrow"/);
   assert.doesNotMatch(html, /↗/);
   assert.match(html, /Optimize new solver unification table ops/);
@@ -106,11 +104,13 @@ test("configures the durable cache and lean toolchain", async () => {
   assert.match(pullMigration, /CREATE TABLE `github_pull_requests`/);
   assert.match(stylesheet, /h1,\s+h2,\s+h3,\s+h4,\s+h5,\s+h6\s*{[^}]*font-weight: inherit;/s);
   assert.match(stylesheet, /\.commit-heading-actions\s*{[^}]*align-items: flex-start;/s);
-  assert.match(stylesheet, /\.live-status\s*{[^}]*align-items: center;/s);
+  assert.doesNotMatch(stylesheet, /live-status|sync-dot|sync-copy/);
+  assert.match(stylesheet, /\.rollup-copy\s*{[^}]*flex: 1;/s);
+  assert.match(stylesheet, /\.commit-heading-copy\s*{[^}]*display: contents;/s);
+  assert.doesNotMatch(stylesheet, /max-width:\s*59vw/);
   assert.doesNotMatch(stylesheet, /\.rollup-details\s*{[^}]*border-(?:top|bottom)/s);
   assert.doesNotMatch(stylesheet, /history-stats|commit-message-popover|view-rules|summary-action|commit-footer/);
-  assert.match(historyRoute, /requestedRefFetchedAt \?\? Date\.now\(\)/);
-  assert.doesNotMatch(historyRoute, /fetchedAt: new Date\(\)\.toISOString\(\)/);
+  assert.doesNotMatch(historyRoute, /requestedRefFetchedAt/);
   assert.match(pullRoute, /readCachedPullRequest\(number\)/);
   assert.match(pullRoute, /writeCachedPullRequest\(pullRequest, Date\.now\(\)\)/);
   assert.match(pullRoute, /Number\.isSafeInteger\(number\)/);

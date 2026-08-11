@@ -23,7 +23,6 @@ export type HistoryItem = {
 export type HistoryResponse = {
   items: HistoryItem[];
   nextSha: string | null;
-  fetchedAt: string;
 };
 
 export type PullRequestDetails = {

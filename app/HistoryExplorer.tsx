@@ -41,25 +41,6 @@ const localTimeFormatter = new Intl.DateTimeFormat("en", {
   timeZoneName: "short",
 });
 
-const utcSyncFormatter = new Intl.DateTimeFormat("en", {
-  month: "short",
-  day: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-  hourCycle: "h23",
-  timeZone: "UTC",
-  timeZoneName: "short",
-});
-
-const localSyncFormatter = new Intl.DateTimeFormat("en", {
-  month: "short",
-  day: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-  hourCycle: "h23",
-  timeZoneName: "short",
-});
-
 const subscribeToHydration = () => () => undefined;
 
 function useBrowserTimeZone() {
@@ -74,12 +55,6 @@ function dayKey(date: string, browserTimeZone: boolean) {
   if (!browserTimeZone) return date.slice(0, 10);
   const value = new Date(date);
   return `${value.getFullYear()}-${value.getMonth()}-${value.getDate()}`;
-}
-
-function formatSyncTime(date: string, browserTimeZone: boolean) {
-  const value = new Date(date);
-  if (Number.isNaN(value.getTime())) return null;
-  return (browserTimeZone ? localSyncFormatter : utcSyncFormatter).format(value);
 }
 
 function matchesQuery(item: HistoryItem, query: string) {
@@ -103,9 +78,13 @@ function ExternalArrow() {
 }
 
 async function fetchHistoryPage(url: string, signal?: AbortSignal) {
-  const response = await fetch(url, { signal });
-  if (!response.ok) throw new Error("History request failed");
-  return (await response.json()) as HistoryResponse;
+  try {
+    const response = await fetch(url, { signal });
+    if (!response.ok) return null;
+    return (await response.json()) as HistoryResponse;
+  } catch {
+    return null;
+  }
 }
 
 async function requestPullRequestDetails(number: number) {
@@ -348,29 +327,20 @@ export function HistoryExplorer() {
   const [items, setItems] = useState<HistoryItem[]>(fallbackItems);
   const [nextSha, setNextSha] = useState<string | null>(null);
   const [query, setQuery] = useState("");
-  const [lastSyncAt, setLastSyncAt] = useState<string | null>(null);
-  const [status, setStatus] = useState<"loading" | "live" | "snapshot" | "loading-more">("loading");
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
 
     async function loadLatest() {
-      try {
-        const data = await fetchHistoryPage("/api/history?limit=9", controller.signal);
-        if (data.items.length > 0) {
-          setItems(data.items);
-          setNextSha(data.nextSha);
-          setLastSyncAt(data.fetchedAt);
-          setStatus("live");
-        }
-      } catch (error) {
-        if (!(error instanceof DOMException && error.name === "AbortError")) {
-          setStatus("snapshot");
-        }
+      const data = await fetchHistoryPage("/api/history?limit=9", controller.signal);
+      if (data && data.items.length > 0) {
+        setItems(data.items);
+        setNextSha(data.nextSha);
       }
     }
 
-    loadLatest();
+    void loadLatest();
     return () => controller.abort();
   }, []);
 
@@ -379,28 +349,19 @@ export function HistoryExplorer() {
     () => items.filter((item) => matchesQuery(item, normalizedQuery)),
     [items, normalizedQuery],
   );
-  const lastSyncTime = lastSyncAt ? formatSyncTime(lastSyncAt, browserTimeZone) : null;
-  const syncLabel = status === "loading"
-    ? "Syncing GitHub"
-    : status === "snapshot"
-      ? "Cached snapshot"
-      : "GitHub synced";
-
   async function loadOlder() {
-    if (!nextSha || status === "loading-more") return;
-    setStatus("loading-more");
+    if (!nextSha || isLoadingMore) return;
+    setIsLoadingMore(true);
 
-    try {
-      const data = await fetchHistoryPage(`/api/history?limit=9&sha=${nextSha}`);
+    const data = await fetchHistoryPage(`/api/history?limit=9&sha=${nextSha}`);
+    if (data) {
       setItems((current) => {
         const known = new Set(current.map((item) => item.sha));
         return [...current, ...data.items.filter((item) => !known.has(item.sha))];
       });
       setNextSha(data.nextSha);
-      setStatus("live");
-    } catch {
-      setStatus("snapshot");
     }
+    setIsLoadingMore(false);
   }
 
   return (
@@ -461,21 +422,6 @@ export function HistoryExplorer() {
               <button type="button" onClick={() => setQuery("")} aria-label="Clear search">×</button>
             )}
           </label>
-          <div className={`live-status ${status === "snapshot" ? "is-snapshot" : ""}`} aria-live="polite">
-            <span className="sync-dot" aria-hidden="true" />
-            <span className="sync-copy">
-              <strong>{syncLabel}</strong>
-              <span>
-                {lastSyncAt && lastSyncTime ? (
-                  <>Last sync · <time dateTime={lastSyncAt}>{lastSyncTime}</time></>
-                ) : status === "loading" ? (
-                  "Checking edge cache"
-                ) : (
-                  "Live sync unavailable"
-                )}
-              </span>
-            </span>
-          </div>
         </div>
 
         <div className="timeline">
@@ -517,9 +463,9 @@ export function HistoryExplorer() {
               className="load-more"
               type="button"
               onClick={loadOlder}
-              disabled={status === "loading-more"}
+              disabled={isLoadingMore}
             >
-              <span>{status === "loading-more" ? "Loading…" : "Load older mainline commits"}</span>
+              <span>{isLoadingMore ? "Loading…" : "Load older mainline commits"}</span>
               <span className="load-more-icon" aria-hidden="true">↓</span>
             </button>
           </div>
