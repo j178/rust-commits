@@ -439,7 +439,7 @@ export function HistoryExplorer() {
           </div>
           <div className={`live-status ${status === "snapshot" ? "is-snapshot" : ""}`} aria-live="polite">
             <span />
-            {status === "loading" ? "syncing" : status === "snapshot" ? "cached snapshot" : "live from GitHub"}
+            {status === "loading" ? "syncing" : status === "snapshot" ? "cached snapshot" : "GitHub synced"}
           </div>
         </div>
 

@@ -55,3 +55,27 @@ test("removes all starter-preview wiring", async () => {
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
   await assert.rejects(access(new URL("../app/_sites-preview/SkeletonPreview.tsx", import.meta.url)));
 });
+
+test("configures the durable cache and lean toolchain", async () => {
+  const [hostingJson, packageJson, migration] = await Promise.all([
+    readFile(new URL("../.openai/hosting.json", import.meta.url), "utf8"),
+    readFile(new URL("../package.json", import.meta.url), "utf8"),
+    readFile(new URL("../drizzle/0000_special_whiplash.sql", import.meta.url), "utf8"),
+  ]);
+
+  const hosting = JSON.parse(hostingJson);
+  const packageConfig = JSON.parse(packageJson);
+  assert.equal(hosting.d1, "DB");
+  assert.match(packageConfig.scripts.lint, /^oxlint\b/);
+  assert.doesNotMatch(packageJson, /eslint|tailwindcss/);
+  assert.match(migration, /CREATE TABLE `github_commits`/);
+  assert.match(migration, /CREATE TABLE `github_commit_pages`/);
+
+  await Promise.all([
+    assert.rejects(access(new URL("../app/chatgpt-auth.ts", import.meta.url))),
+    assert.rejects(access(new URL("../eslint.config.mjs", import.meta.url))),
+    assert.rejects(access(new URL("../examples/d1", import.meta.url))),
+    assert.rejects(access(new URL("../next.config.ts", import.meta.url))),
+    assert.rejects(access(new URL("../postcss.config.mjs", import.meta.url))),
+  ]);
+});

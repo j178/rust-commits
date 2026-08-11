@@ -1,4 +1,17 @@
-// Intentionally empty by default.
-// Add Drizzle tables here when the site actually needs a database.
-// See examples/d1/db/schema.ts for an opt-in example.
-export {};
+import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+
+export const githubCommits = sqliteTable("github_commits", {
+  sha: text("sha").primaryKey(),
+  htmlUrl: text("html_url").notNull(),
+  message: text("message").notNull(),
+  authorName: text("author_name").notNull(),
+  authoredAt: text("authored_at").notNull(),
+  parentsJson: text("parents_json").notNull(),
+  cachedAt: integer("cached_at").notNull(),
+});
+
+export const githubCommitPages = sqliteTable("github_commit_pages", {
+  ref: text("ref").primaryKey(),
+  commitShasJson: text("commit_shas_json").notNull(),
+  fetchedAt: integer("fetched_at").notNull(),
+});

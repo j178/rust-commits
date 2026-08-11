@@ -4,11 +4,13 @@ import {
   type HistoryItem,
   type HistoryResponse,
 } from "@/app/lib/history";
+import { readCachedCommitBatch, writeCachedCommitBatch } from "@/db";
 
 const GITHUB_COMMITS_URL = "https://api.github.com/repos/rust-lang/rust/commits";
 const MAX_BATCHES = 3;
+const MAIN_CACHE_TTL_MS = 5 * 60 * 1000;
 
-async function fetchCommitBatch(ref: string): Promise<GitHubCommit[]> {
+async function fetchGitHubCommitBatch(ref: string): Promise<GitHubCommit[]> {
   const url = new URL(GITHUB_COMMITS_URL);
   url.searchParams.set("sha", ref);
   url.searchParams.set("per_page", "100");
@@ -34,6 +36,32 @@ async function fetchCommitBatch(ref: string): Promise<GitHubCommit[]> {
   }
 
   return (await response.json()) as GitHubCommit[];
+}
+
+async function fetchCommitBatch(ref: string): Promise<GitHubCommit[]> {
+  let cached = null;
+  try {
+    cached = await readCachedCommitBatch(ref);
+  } catch (error) {
+    console.warn("Unable to read the GitHub commit cache.", error);
+  }
+
+  if (cached && (ref !== "main" || Date.now() - cached.fetchedAt < MAIN_CACHE_TTL_MS)) {
+    return cached.commits;
+  }
+
+  try {
+    const commits = await fetchGitHubCommitBatch(ref);
+    try {
+      await writeCachedCommitBatch(ref, commits);
+    } catch (error) {
+      console.warn("Unable to update the GitHub commit cache.", error);
+    }
+    return commits;
+  } catch (error) {
+    if (cached) return cached.commits;
+    throw error;
+  }
 }
 
 function isValidRef(ref: string) {
