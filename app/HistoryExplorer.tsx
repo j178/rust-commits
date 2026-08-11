@@ -218,17 +218,27 @@ function CommitMeta({ item }: { item: HistoryItem }) {
 function RollupList({ item }: { item: HistoryItem }) {
   const successful = item.rollup.filter((entry) => entry.status === "merged");
   const failed = item.rollup.filter((entry) => entry.status === "failed");
+  const includedCount = successful.length || item.rollupCount;
+  const includedLabel = `${includedCount} pull request${includedCount === 1 ? "" : "s"} included`;
+  const failedLabel = `${failed.length} failed candidate${failed.length === 1 ? " was" : "s were"} left out`;
 
   return (
     <details className="rollup-details">
-      <summary>
+      <summary
+        aria-label={`${includedLabel}. ${failed.length > 0 ? failedLabel : "Combined into this mainline commit"}`}
+      >
         <span className="summary-label">
           <span className="expand-mark" aria-hidden="true" />
-          Included pull requests
+          <span className="summary-copy">
+            <strong>{includedLabel}</strong>
+            <span>
+              {failed.length > 0 ? failedLabel : "Combined into this mainline commit"}
+            </span>
+          </span>
         </span>
-        <span className="summary-hint">
-          {successful.length || item.rollupCount} merged
-          {failed.length > 0 ? ` · ${failed.length} excluded` : ""}
+        <span className="summary-action" aria-hidden="true">
+          <span className="summary-action-closed">View PRs</span>
+          <span className="summary-action-open">Hide PRs</span>
         </span>
       </summary>
       <div className="rollup-list">
@@ -248,6 +258,9 @@ function RollupList({ item }: { item: HistoryItem }) {
             <ExternalArrow />
           </a>
         ))}
+        {failed.length > 0 && (
+          <div className="rollup-list-divider">Failed candidates · not in this commit</div>
+        )}
         {failed.map((entry) => (
           <a
             className="rollup-entry failed"
@@ -259,7 +272,7 @@ function RollupList({ item }: { item: HistoryItem }) {
             <span className="rollup-index">×</span>
             <span className="rollup-copy">
               <strong>{entry.title}</strong>
-              <span>PR #{entry.pr} · not included</span>
+              <span>PR #{entry.pr}</span>
             </span>
             <ExternalArrow />
           </a>

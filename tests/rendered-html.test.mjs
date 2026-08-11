@@ -35,9 +35,11 @@ test("server-renders the Rust Mainline product", async () => {
   assert.match(html, /class="hero-title"/);
   assert.match(html, /Mainline history/);
   assert.match(html, /Optimize new solver unification table ops/);
-  assert.match(html, /Included pull requests/);
   assert.match(html, /<details class="rollup-details">/);
-  assert.match(html, /9<!-- --> merged/);
+  assert.match(html, /9 pull requests included/);
+  assert.match(html, /1 failed candidate was left out/);
+  assert.match(html, /Failed candidates · not in this commit/);
+  assert.doesNotMatch(html, /Included pull requests|9<!-- --> merged|excluded/);
   assert.match(html, /Commit message/);
   assert.match(html, /<details class="commit-message">/);
   assert.match(html, /Auto merge of #160801/);

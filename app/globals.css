@@ -752,13 +752,45 @@ a {
 
 .summary-label {
   gap: 11px;
+  min-width: 0;
+}
+
+.summary-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.summary-copy strong {
+  color: #e7e1d7;
   font: 680 12px/1 var(--font-mono);
   letter-spacing: 0.02em;
 }
 
-.summary-hint {
+.summary-copy > span {
   color: #817c74;
-  font: 500 10px/1 var(--font-mono);
+  font: 500 9px/1.2 var(--font-mono);
+}
+
+.summary-action {
+  flex: 0 0 auto;
+  color: #918b82;
+  font: 650 9px/1 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.summary-action-open {
+  display: none;
+}
+
+.rollup-details[open] .summary-action-closed {
+  display: none;
+}
+
+.rollup-details[open] .summary-action-open {
+  display: inline;
 }
 
 .expand-mark {
@@ -792,6 +824,20 @@ a {
 
 .rollup-list {
   padding: 0 0 13px 33px;
+}
+
+.rollup-list-divider {
+  margin-top: 6px;
+  padding: 13px 12px 7px;
+  border-top: 1px solid #3d3935;
+  color: #bd765f;
+  font: 650 8px/1 var(--font-mono);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.rollup-list-divider + .rollup-entry {
+  border-top: 0;
 }
 
 .rollup-entry {
@@ -1129,7 +1175,7 @@ summary:focus-visible {
     font-size: 11px;
   }
 
-  .summary-hint {
+  .summary-action {
     display: none;
   }
 
