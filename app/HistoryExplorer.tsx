@@ -430,47 +430,20 @@ export function HistoryExplorer() {
   }
 
   return (
-    <main>
+    <main id="top">
       <header className="site-header">
         <a className="wordmark" href="#top" aria-label="Rust Mainline home">
           <span className="wordmark-mark" aria-hidden="true">R</span>
-          <span>RUST / MAINLINE</span>
+          <span>Rust Mainline</span>
         </a>
         <a className="repo-link" href={RUST_REPO} target="_blank" rel="noreferrer">
           rust-lang/rust <ExternalArrow />
         </a>
       </header>
 
-      <section className="hero" id="top">
-        <div className="hero-copy">
-          <p className="eyebrow"><span /> FIRST-PARENT HISTORY</p>
-          <h1 className="hero-title">
-            <span>Rust,</span>
-            <em>on main.</em>
-          </h1>
-          <p className="hero-description">
-            Merged PRs without the inner-commit noise. Rollups unfold on demand.
-          </p>
-        </div>
-        <div className="hero-diagram" aria-label="A diagram showing noisy commits folded into a clean mainline">
-          <div className="diagram-label top">HEAD <span>main</span></div>
-          <div className="diagram-line" />
-          <span className="diagram-node node-one" />
-          <span className="diagram-node node-two" />
-          <span className="diagram-node node-three" />
-          <div className="folded-branch">
-            <span /><span /><span /><span />
-          </div>
-          <div className="diagram-label bottom">FIRST PARENT</div>
-        </div>
-      </section>
-
       <section className="history-shell" aria-labelledby="history-title">
         <div className="history-intro">
-          <div>
-            <p className="section-kicker">THE LOG, MINUS THE NOISE</p>
-            <h2 id="history-title">Mainline history</h2>
-          </div>
+          <h1 id="history-title">Recent commits</h1>
         </div>
 
         <div className="toolbar">
@@ -554,8 +527,7 @@ export function HistoryExplorer() {
       </section>
 
       <footer>
-        <p>Derived from rust-lang/rust’s first-parent chain. Not affiliated with the Rust project.</p>
-        <p>GitHub data · refreshed at the edge</p>
+        <p>Not affiliated with the Rust project.</p>
       </footer>
     </main>
   );
