@@ -38,6 +38,26 @@ visitor first hovers or focuses an entry, then persisted in D1 for later views.
 
 ## Deployment
 
-The vinext build emits Cloudflare Worker-compatible output. Sites owns the D1
-resource declared in `.openai/hosting.json` and applies the generated Drizzle
-migrations during deployment.
+The vinext build emits Cloudflare Worker-compatible output. The checked-in
+`wrangler.toml` is the source of truth for direct deployments to a Cloudflare
+account, while `.openai/hosting.json` keeps the existing Sites deployment
+available during the migration.
+
+Authenticate once, then create the production D1 database and let Wrangler
+write its ID into `wrangler.toml`:
+
+```bash
+WRANGLER_LOG_PATH=.wrangler/wrangler.log npx wrangler login
+npx wrangler d1 create rust-mainline --binding DB --location apac --update-config
+npm run db:migrate
+```
+
+Deploy first to the generated `workers.dev` URL without changing the current
+custom domain:
+
+```bash
+npm run deploy
+```
+
+After that deployment is verified, add `rust.j178.dev` as a Worker Custom
+Domain and remove the old Sites CNAME during the final cutover.

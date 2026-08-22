@@ -1,0 +1,13 @@
+name = "rust-mainline"
+main = "./worker/index.ts"
+compatibility_date = "2026-05-15"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+
+[observability]
+enabled = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "rust-mainline"
+migrations_dir = "drizzle"

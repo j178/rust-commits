@@ -82,8 +82,10 @@ test("removes all starter-preview wiring", async () => {
 });
 
 test("configures the durable cache and lean toolchain", async () => {
-  const [hostingJson, packageJson, migration, pullMigration, stylesheet, historyRoute, pullRoute, database, readme] = await Promise.all([
+  const [hostingJson, wranglerToml, viteConfig, packageJson, migration, pullMigration, stylesheet, historyRoute, pullRoute, database, readme] = await Promise.all([
     readFile(new URL("../.openai/hosting.json", import.meta.url), "utf8"),
+    readFile(new URL("../wrangler.toml", import.meta.url), "utf8"),
+    readFile(new URL("../vite.config.ts", import.meta.url), "utf8"),
     readFile(new URL("../package.json", import.meta.url), "utf8"),
     readFile(new URL("../drizzle/0000_special_whiplash.sql", import.meta.url), "utf8"),
     readFile(new URL("../drizzle/0001_sudden_paladin.sql", import.meta.url), "utf8"),
@@ -97,7 +99,23 @@ test("configures the durable cache and lean toolchain", async () => {
   const hosting = JSON.parse(hostingJson);
   const packageConfig = JSON.parse(packageJson);
   assert.equal(hosting.d1, "DB");
+  assert.match(wranglerToml, /^name = "rust-mainline"$/m);
+  assert.match(wranglerToml, /^main = "\.\/worker\/index\.ts"$/m);
+  assert.match(wranglerToml, /^binding = "DB"$/m);
+  assert.match(wranglerToml, /^database_name = "rust-mainline"$/m);
+  assert.match(wranglerToml, /^migrations_dir = "drizzle"$/m);
+  assert.doesNotMatch(wranglerToml, /00000000-0000-4000-8000-000000000000/);
+  assert.doesNotMatch(viteConfig, /hostingConfig|PLACEHOLDER_DATABASE_ID|localBindingConfig/);
+  assert.match(viteConfig, /cloudflare\(\{\s*viteEnvironment:/s);
   assert.match(packageConfig.scripts.lint, /^oxlint\b/);
+  assert.equal(
+    packageConfig.scripts.deploy,
+    "npm run build && WRANGLER_LOG_PATH=.wrangler/wrangler.log wrangler deploy",
+  );
+  assert.equal(
+    packageConfig.scripts["db:migrate"],
+    "WRANGLER_LOG_PATH=.wrangler/wrangler.log wrangler d1 migrations apply rust-mainline --remote",
+  );
   assert.doesNotMatch(packageJson, /eslint|tailwindcss/);
   assert.match(migration, /CREATE TABLE `github_commits`/);
   assert.match(migration, /CREATE TABLE `github_commit_pages`/);
