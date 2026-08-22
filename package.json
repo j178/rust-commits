@@ -6,14 +6,13 @@
     "node": ">=22.13.0"
   },
   "scripts": {
-    "dev": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext dev",
-    "build": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext build",
-    "start": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext start",
-    "deploy": "npm run build && WRANGLER_LOG_PATH=.wrangler/wrangler.log wrangler deploy",
-    "test": "npm run build && node --test tests/rendered-html.test.mjs",
+    "dev": "vinext dev",
+    "build": "vinext build",
+    "start": "vinext start",
+    "deploy": "npm run build && wrangler deploy",
     "lint": "oxlint . --import-plugin --react-plugin --jsx-a11y-plugin --nextjs-plugin --deny-warnings",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "WRANGLER_LOG_PATH=.wrangler/wrangler.log wrangler d1 migrations apply rust-mainline --remote"
+    "db:migrate": "wrangler d1 migrations apply rust-mainline --remote"
   },
   "dependencies": {
     "drizzle-orm": "0.45.2",
