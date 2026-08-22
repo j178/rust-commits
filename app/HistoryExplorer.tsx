@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
-import { fallbackItems } from "./lib/fallback-history";
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import {
   RUST_REPO,
   type HistoryItem,
@@ -26,7 +25,10 @@ const localDayFormatter = new Intl.DateTimeFormat("en", {
   year: "numeric",
 });
 
-const utcTimeFormatter = new Intl.DateTimeFormat("en", {
+const utcExactTimeFormatter = new Intl.DateTimeFormat("en", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
   hour: "2-digit",
   minute: "2-digit",
   hourCycle: "h23",
@@ -34,12 +36,26 @@ const utcTimeFormatter = new Intl.DateTimeFormat("en", {
   timeZoneName: "short",
 });
 
-const localTimeFormatter = new Intl.DateTimeFormat("en", {
+const localExactTimeFormatter = new Intl.DateTimeFormat("en", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
   hour: "2-digit",
   minute: "2-digit",
   hourCycle: "h23",
   timeZoneName: "short",
 });
+
+const relativeTimeFormatter = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+
+const relativeTimeUnits = [
+  ["year", 365 * 24 * 60 * 60 * 1000],
+  ["month", 30 * 24 * 60 * 60 * 1000],
+  ["week", 7 * 24 * 60 * 60 * 1000],
+  ["day", 24 * 60 * 60 * 1000],
+  ["hour", 60 * 60 * 1000],
+  ["minute", 60 * 1000],
+] as const;
 
 const subscribeToHydration = () => () => undefined;
 
@@ -55,6 +71,19 @@ function dayKey(date: string, browserTimeZone: boolean) {
   if (!browserTimeZone) return date.slice(0, 10);
   const value = new Date(date);
   return `${value.getFullYear()}-${value.getMonth()}-${value.getDate()}`;
+}
+
+function formatRelativeTime(date: string, now: number) {
+  const difference = new Date(date).getTime() - now;
+  if (Math.abs(difference) < 60 * 1000) return "just now";
+
+  const unit = relativeTimeUnits.find(([, milliseconds]) =>
+    Math.abs(difference) >= milliseconds,
+  );
+  if (!unit) return "just now";
+
+  const [name, milliseconds] = unit;
+  return relativeTimeFormatter.format(Math.round(difference / milliseconds), name);
 }
 
 function matchesQuery(item: HistoryItem, query: string) {
@@ -272,15 +301,36 @@ function RollupList({ item }: { item: HistoryItem }) {
   );
 }
 
+function TimelineLoading() {
+  return (
+    <div className="timeline-loading" aria-busy="true" aria-live="polite">
+      <span className="visually-hidden">Loading latest mainline history…</span>
+      {[0, 1, 2].map((index) => (
+        <div className="timeline-placeholder" aria-hidden="true" key={index}>
+          <span className="timeline-node" />
+          <span className="placeholder-line placeholder-label" />
+          <span className="placeholder-line placeholder-title" />
+          <span className="placeholder-line placeholder-meta" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function CommitCard({
   item,
   browserTimeZone,
+  now,
 }: {
   item: HistoryItem;
   browserTimeZone: boolean;
+  now: number;
 }) {
   const isRollup = item.kind === "rollup";
-  const commitTime = (browserTimeZone ? localTimeFormatter : utcTimeFormatter).format(
+  const exactCommitTime = (browserTimeZone
+    ? localExactTimeFormatter
+    : utcExactTimeFormatter
+  ).format(
     new Date(item.date),
   );
 
@@ -304,7 +354,9 @@ function CommitCard({
           {isRollup ? <RollupList item={item} /> : <CommitTitle item={item} />}
         </div>
         <div className="commit-heading-actions">
-          <time className="commit-time" dateTime={item.date}>{commitTime}</time>
+          <time className="commit-time" dateTime={item.date} title={exactCommitTime}>
+            {formatRelativeTime(item.date, now)}
+          </time>
           <a
             className="open-commit"
             href={item.url}
@@ -324,24 +376,37 @@ function CommitCard({
 
 export function HistoryExplorer() {
   const browserTimeZone = useBrowserTimeZone();
-  const [items, setItems] = useState<HistoryItem[]>(fallbackItems);
+  const [items, setItems] = useState<HistoryItem[]>([]);
   const [nextSha, setNextSha] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [loadState, setLoadState] = useState<"loading" | "ready" | "error">("loading");
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [now, setNow] = useState(Date.now);
+
+  const loadLatest = useCallback(async (signal?: AbortSignal) => {
+    setLoadState("loading");
+    const data = await fetchHistoryPage("/api/history?limit=9", signal);
+    if (signal?.aborted) return;
+
+    if (!data || data.items.length === 0) {
+      setLoadState("error");
+      return;
+    }
+
+    setItems(data.items);
+    setNextSha(data.nextSha);
+    setLoadState("ready");
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
-
-    async function loadLatest() {
-      const data = await fetchHistoryPage("/api/history?limit=9", controller.signal);
-      if (data && data.items.length > 0) {
-        setItems(data.items);
-        setNextSha(data.nextSha);
-      }
-    }
-
-    void loadLatest();
+    void loadLatest(controller.signal);
     return () => controller.abort();
+  }, [loadLatest]);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => setNow(Date.now()), 60 * 1000);
+    return () => window.clearInterval(interval);
   }, []);
 
   const normalizedQuery = query.trim().toLowerCase();
@@ -414,9 +479,14 @@ export function HistoryExplorer() {
             <span aria-hidden="true" className="search-icon">⌕</span>
             <input
               type="search"
-              placeholder="Search PR, author, title, SHA…"
+              placeholder={
+                loadState === "loading"
+                  ? "Loading latest commits…"
+                  : "Search PR, author, title, SHA…"
+              }
               value={query}
               onChange={(event) => setQuery(event.target.value)}
+              disabled={loadState !== "ready"}
             />
             {query && (
               <button type="button" onClick={() => setQuery("")} aria-label="Clear search">×</button>
@@ -425,7 +495,9 @@ export function HistoryExplorer() {
         </div>
 
         <div className="timeline">
-          {filteredItems.map((item, index) => {
+          {loadState === "loading" && <TimelineLoading />}
+
+          {loadState === "ready" && filteredItems.map((item, index) => {
             const currentDay = dayKey(item.date, browserTimeZone);
             const previousItem = filteredItems[index - 1];
             const previousDay = previousItem ? dayKey(previousItem.date, browserTimeZone) : null;
@@ -442,12 +514,21 @@ export function HistoryExplorer() {
                     <span className="day-marker" aria-hidden="true" />
                   </div>
                 )}
-                <CommitCard item={item} browserTimeZone={browserTimeZone} />
+                <CommitCard item={item} browserTimeZone={browserTimeZone} now={now} />
               </div>
             );
           })}
 
-          {filteredItems.length === 0 && (
+          {loadState === "error" && (
+            <div className="empty-state history-load-error" role="alert">
+              <span aria-hidden="true">!</span>
+              <h3>Latest history didn’t load</h3>
+              <p>The cached GitHub history is temporarily unavailable.</p>
+              <button type="button" onClick={() => void loadLatest()}>Try again</button>
+            </div>
+          )}
+
+          {loadState === "ready" && filteredItems.length === 0 && (
             <div className="empty-state">
               <span aria-hidden="true">∅</span>
               <h3>No loaded merge matches “{query}”</h3>
@@ -457,7 +538,7 @@ export function HistoryExplorer() {
           )}
         </div>
 
-        {!normalizedQuery && nextSha && (
+        {loadState === "ready" && !normalizedQuery && nextSha && (
           <div className="load-more-wrap">
             <button
               className="load-more"

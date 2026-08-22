@@ -40,32 +40,13 @@ test("server-renders the Rust Mainline product", async () => {
   assert.doesNotMatch(html, /GitHub synced|Syncing GitHub|Checking edge cache|class="sync-/);
   assert.match(html, /class="external-arrow"/);
   assert.doesNotMatch(html, /↗/);
-  assert.match(html, /Optimize new solver unification table ops/);
-  assert.match(html, /<details class="rollup-details">/);
-  assert.match(html, /9 pull requests included/);
-  assert.match(html, /1 failed candidate was left out/);
-  assert.match(html, /Failed candidates · not in this commit/);
-  assert.doesNotMatch(html, /Included pull requests|9<!-- --> merged|excluded/);
-  assert.doesNotMatch(html, /class="summary-copy"/);
-  assert.doesNotMatch(html, />1 failed candidate was left out</);
-  assert.doesNotMatch(html, />Combined into this mainline commit</);
-  assert.match(html, /class="commit-message-trigger"/);
-  assert.match(html, /class="detail-popover"[^>]*role="tooltip"/);
-  assert.match(html, /Loading PR details…/);
-  assert.match(html, /Auto merge of #160801/);
+  assert.match(html, /class="timeline-loading"[^>]*aria-busy="true"/);
+  assert.match(html, /Loading latest mainline history…/);
+  assert.match(html, /class="timeline-placeholder"/);
+  assert.doesNotMatch(html, /Optimize new solver unification table ops/);
+  assert.doesNotMatch(html, /class="commit-card/);
   assert.doesNotMatch(html, /history-stats/);
-  assert.doesNotMatch(html, /<details class="commit-message">/);
-  assert.doesNotMatch(html, /View PRs|Hide PRs|class="summary-action"/);
-  assert.doesNotMatch(html, />Included pull request<|>Commit message</);
-  assert.doesNotMatch(html, /class="view-rules"/);
-  assert.doesNotMatch(html, /One tested batch on the mainline/);
-  assert.doesNotMatch(html, /commit-card-topline/);
-  assert.doesNotMatch(html, /<h2>Rollup of \d+ pull requests<\/h2>/);
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton|Your site is taking shape/);
-
-  const rollupCards = html.match(/<article class="commit-card is-rollup">[\s\S]*?<\/article>/g) ?? [];
-  assert.ok(rollupCards.length > 0);
-  for (const card of rollupCards) assert.doesNotMatch(card, /commit-message/);
 });
 
 test("removes all starter-preview wiring", async () => {
@@ -82,7 +63,7 @@ test("removes all starter-preview wiring", async () => {
 });
 
 test("configures the durable cache and lean toolchain", async () => {
-  const [hostingJson, wranglerToml, viteConfig, packageJson, migration, pullMigration, stylesheet, historyRoute, pullRoute, database, readme] = await Promise.all([
+  const [hostingJson, wranglerToml, viteConfig, packageJson, migration, pullMigration, stylesheet, historyExplorer, historyRoute, pullRoute, database, readme] = await Promise.all([
     readFile(new URL("../.openai/hosting.json", import.meta.url), "utf8"),
     readFile(new URL("../wrangler.toml", import.meta.url), "utf8"),
     readFile(new URL("../vite.config.ts", import.meta.url), "utf8"),
@@ -90,6 +71,7 @@ test("configures the durable cache and lean toolchain", async () => {
     readFile(new URL("../drizzle/0000_special_whiplash.sql", import.meta.url), "utf8"),
     readFile(new URL("../drizzle/0001_sudden_paladin.sql", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+    readFile(new URL("../app/HistoryExplorer.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/api/history/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/api/pull/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../db/index.ts", import.meta.url), "utf8"),
@@ -128,6 +110,15 @@ test("configures the durable cache and lean toolchain", async () => {
   assert.doesNotMatch(stylesheet, /max-width:\s*59vw/);
   assert.doesNotMatch(stylesheet, /\.rollup-details\s*{[^}]*border-(?:top|bottom)/s);
   assert.doesNotMatch(stylesheet, /history-stats|commit-message-popover|view-rules|summary-action|commit-footer/);
+  assert.match(stylesheet, /\.timeline-placeholder\s*{/);
+  assert.match(historyExplorer, /new Intl\.RelativeTimeFormat\("en", \{ numeric: "auto" \}\)/);
+  assert.match(historyExplorer, /window\.setInterval\(\(\) => setNow\(Date\.now\(\)\), 60 \* 1000\)/);
+  assert.match(historyExplorer, /title=\{exactCommitTime\}/);
+  assert.match(historyExplorer, /className="rollup-details"/);
+  assert.match(historyExplorer, /className="commit-message-trigger"/);
+  assert.match(historyExplorer, /className="detail-popover"/);
+  assert.doesNotMatch(historyExplorer, /fallbackItems|fallback-history/);
+  assert.doesNotMatch(historyExplorer, /View PRs|Hide PRs|className="summary-action"/);
   assert.doesNotMatch(historyRoute, /requestedRefFetchedAt/);
   assert.match(pullRoute, /readCachedPullRequest\(number\)/);
   assert.match(pullRoute, /writeCachedPullRequest\(pullRequest, Date\.now\(\)\)/);
@@ -140,6 +131,7 @@ test("configures the durable cache and lean toolchain", async () => {
     access(new URL("../public/favicon.ico", import.meta.url)),
     access(new URL("../public/favicon-32x32.png", import.meta.url)),
     access(new URL("../public/apple-touch-icon.png", import.meta.url)),
+    assert.rejects(access(new URL("../app/lib/fallback-history.ts", import.meta.url))),
     assert.rejects(access(new URL("../app/chatgpt-auth.ts", import.meta.url))),
     assert.rejects(access(new URL("../eslint.config.mjs", import.meta.url))),
     assert.rejects(access(new URL("../examples/d1", import.meta.url))),

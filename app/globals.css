@@ -366,6 +366,10 @@ a {
   color: #8e887e;
 }
 
+.search-field input:disabled {
+  cursor: wait;
+}
+
 .search-field:focus-within {
   border-color: var(--rust);
   box-shadow: 0 0 0 2px rgba(238, 91, 50, 0.13);
@@ -400,6 +404,50 @@ a {
 .timeline-entry {
   position: relative;
   margin-bottom: 22px;
+}
+
+.timeline-loading {
+  display: grid;
+  gap: 22px;
+}
+
+.timeline-placeholder {
+  position: relative;
+  min-height: 132px;
+  padding: 26px 28px 18px;
+  border: 1px solid #d2cbbf;
+  background: var(--paper-bright);
+}
+
+.timeline-placeholder::before {
+  content: "";
+  position: absolute;
+  top: 39px;
+  left: -42px;
+  width: 41px;
+  border-top: 1px solid #bcb4a8;
+}
+
+.placeholder-line {
+  display: block;
+  background: #e7e0d5;
+}
+
+.placeholder-label {
+  width: 92px;
+  height: 8px;
+  margin: 2px 0 17px;
+}
+
+.placeholder-title {
+  width: min(72%, 520px);
+  height: 23px;
+}
+
+.placeholder-meta {
+  width: min(44%, 280px);
+  height: 9px;
+  margin-top: 29px;
 }
 
 .day-label {
@@ -1088,6 +1136,16 @@ summary:focus-visible {
 
   .commit-card {
     padding: 21px 18px 15px;
+  }
+
+  .timeline-placeholder {
+    min-height: 123px;
+    padding: 21px 18px 15px;
+  }
+
+  .timeline-placeholder::before {
+    left: -17px;
+    width: 16px;
   }
 
   .commit-card.is-rollup {
