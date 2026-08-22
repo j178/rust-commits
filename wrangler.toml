@@ -10,4 +10,5 @@ enabled = true
 [[d1_databases]]
 binding = "DB"
 database_name = "rust-mainline"
+database_id = "aae2e101-896b-41df-af14-7a230033a40f"
 migrations_dir = "drizzle"

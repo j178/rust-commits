@@ -41,12 +41,11 @@ first hovers or focuses an entry, then persisted in D1 for later views.
 The vinext build emits Cloudflare Worker-compatible output. The checked-in
 `wrangler.toml` is the source of truth for deployments to Cloudflare.
 
-Authenticate once, then create the production D1 database and let Wrangler
-write its ID into `wrangler.toml`:
+Authenticate once, then apply the checked-in migrations to the configured D1
+database:
 
 ```bash
-npx wrangler login
-npx wrangler d1 create rust-mainline --binding DB --location apac --update-config
+wrangler login
 npm run db:migrate
 ```
 
